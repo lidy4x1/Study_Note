@@ -1453,3 +1453,71 @@ getRememberedSerializedIdentity方法中将rememberMe参数的值进行base64解
 4. 然后进行反序列化
 
 所以只要我们控制了AES密钥，同时服务器存在利用链就可以进行反序列化攻击，执行任意代码
+
+#### 详细分析：
+
+##### 普通登录：
+
+我们在登录点直接下断点分析
+
+![image-20231207210442639](image/image-20231207210442639.png)
+
+先调试，然后返回登录页面登录，再到ij分析
+
+![image-20231207210633276](image/image-20231207210633276.png)
+
+可以看到在这里获取了三个登陆参数的值，然后带入`UsernamePasswordToken`类进行处理，跟进看一下这个类做了什么
+
+![](image/image-20231207213416054.png)
+
+从文档了解到这个类是封装了提交的用户名密码以及`rememberMe`是否勾选，继续跟进
+
+![image-20231207213624079](image/image-20231207213624079.png)
+
+这里设置好了四个字段，回到`UserController`类
+
+![image-20231207220148515](image/image-20231207220148515.png)
+
+可以看到把`UsernamePasswordToken`对象传入了`subject`的`login`方法，这里的`subject`对象实际上获取到的是`WebDelegatingSubject`对象
+
+![image-20231207214244478](image/image-20231207214244478.png)
+
+而`WebDelegatingSubject`对象是`DelegatingSubject`的子类，跟进到`DelegatingSubject`的`login`方法
+
+![image-20231207220244463](image/image-20231207220244463.png)
+
+这里又调用了`securityManager`的`login`方法来对token进行校验，即`DefaultSecurityManager`的login方法，判断是否有这个用户
+
+![](image/image-20231207220539737.png)
+
+![image-20231207221421987](image/image-20231207221421987.png)
+
+跟进defaultsecuritymanager 的login方法发现通过抽象类`AuthenticatingSecurityManager`的`authenticate`方法进行验证
+
+![image-20231207221514054](image/image-20231207221514054.png)
+
+这里包装的`authenticator`是`ModularRealmAuthenticator`，跟进
+
+![image-20231207222037776](image/image-20231207222037776.png)
+
+继承自`AbstractAuthenticator`，跟进到`authenticate`方法，中间又调用了`doAuthenticate`方法
+
+![image-20231207222222483](image/image-20231207222222483.png)
+
+跟进
+
+![image-20231207222356814](image/image-20231207222356814.png)
+
+跟进到`doAuthenticate`方法，这个方法是通过迭代Realm的内部集合来验证token，如果realm有多个，会多个迭代验证，如果realm只有一个，则直接调用`doSingleRealmAuthentication`
+
+![image-20231207222553628](image/image-20231207222553628.png)
+
+可以看到我们只有一个`MainRealm`，那么直接跟进到`MainRealm`的`Authenticator`
+
+<img src="image/image-20231122010813998.png" alt="image-20231122010813998" style="zoom:80%;" />
+
+验证账号密码，通过则返回一个`SimpleAuthenticationInfo`，失败则抛出报错，最后将登录验证后的信息全部return，回到`UserController`
+
+<img src="image/image-20231122012927052.png" alt="image-20231122012927052" style="zoom:80%;" />
+
+至此整个普通登录流程分析完毕
