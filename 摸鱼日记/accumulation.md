@@ -60,8 +60,10 @@ https://blog.csdn.net/Hardworking666/article/details/123833192
 
 ```
 200 OK 处理成功！
+302跳转
 303 See Other 我把你 redirect 到其它的页面，目标的 URL 通过响应报文头的 Location 告诉你。
 304 Not Modified 告诉客户端，你请求的这个资源至你上次取得后，并没有更改，你直接用你本地的缓存吧，我很忙哦，你能不能少来烦我啊！
+403无权限访问
 404 Not Found 你最不希望看到的，即找不到页面。如你在 google 上找到一个页面，点击这个链接返回 404，表示这个页面已经被网站删除了。
 500 Internal Server Error 看到这个错误，你就应该查查服务端的日志了，肯定抛出了一堆异常。
 ```
@@ -1777,17 +1779,17 @@ App敏感信息
 
 ##### 01备案信息查询：
 
-01、**ICP备案查询**
+###### 01、**ICP备案查询**
 
 ```
 https://beian.miit.gov.cn/#/Integrated/index
 ```
 
-![image-20240717150007205](image/image-20240717150007205-17212720446859.png)02、**公安部备案查询**
+###### ![image-20240717150007205](image/image-20240717150007205-17212720446859.png)02、**公安部备案查询**
 
 <img src="image/image-20240717150605200-17212720446855.png" alt="image-20240717150605200" style="zoom:80%;" />
 
-03、**备案反查主域名**
+###### 03、**备案反查主域名**
 
 反查可分为备案域名查询和未备案域名查询。
 
@@ -2026,87 +2028,1691 @@ HTTP header的`Content-Security-Policy`属性
 
 ##### 09企业资产信息
 
+通过企业名称拓展查询目标企业的组织架构、股权信息、股权穿透图、子公司、孙公司、对外投资50%等目标信息，获取其产品业务、域名、邮箱资产范围等，扩大攻击面。大概企业资产收集点如下：
 
+企业数据：
 
+```
+邮箱收集
+邮箱查询：https://hunter.io/
 
+企业架构画像
 
+直属单位、机构设置、供应商*（相关合同、人员、系统、软件等）*、合作商等
 
+业务信息：证券、快递、专用网、院校等
 
 
+```
 
+人员数据，如统计、职责、部门、人员历史泄露密码、浏览习性等
 
+设备信息：
 
+```
+- WiFi
+- 常用密码、部门设备信息
+- OA/erp/crm/sso/mail/vpn等入口
+- 网络安全设备（waf,ips,ids,router等统计）
+- 内部使用的代码托管平台(gitlab、daocloud等)、bug管理平台、监控平台等
+- 服务器域名资产
+- site:xxx
+```
 
+###### **01股权投资信息**
 
+一般要求50%持股或者100% 持股都可以算测试目标。
 
+天眼查：
 
+```
+https://www.tianyancha.com/
+```
 
+<img src="image/image-20240719093628282.png" alt="image-20240719093628282" style="zoom:80%;" />
 
+<img src="image/image-20240719093646978.png" alt="image-20240719093646978" style="zoom:80%;" />
 
+企查查
 
+```
+https://www.qcc.com/
+```
 
+钉钉企典
 
+```
+https://www.dingtalk.com/qidian/home?spm=a213l2.13146415.4929779444.89.7f157166W6H4YZ
+```
 
+###### **02公众号信息**
 
+**搜狗搜索引擎**
 
+https://wx.sogou.com/
 
+<img src="image/image-20240719093955770.png" alt="image-20240719093955770" style="zoom:80%;" />
 
+企查查
 
+https://www.qcc.com/
 
+<img src="image/image-20240719094704970.png" alt="image-20240719094704970" style="zoom:80%;" />
 
+```
+微信app
 
+支付宝app
+```
 
+###### **03应用信息**
 
+天眼查
 
+https://www.tianyancha.com/
 
+<img src="image/image-20240719094927231.png" alt="image-20240719094927231" style="zoom:80%;" />
 
+七麦数据
 
+https://www.qimai.cn/
 
+<img src="image/image-20240719095107972.png" alt="image-20240719095107972" style="zoom:80%;" />
 
+企查查
 
+https://www.qcc.com/
 
+小蓝本
 
+https://www.xiaolanben.com/pc
 
+<img src="image/image-20240719095147078.png" alt="image-20240719095147078" style="zoom:80%;" />
 
+点点数据
 
+https://app.diandian.com/
 
+<img src="image/image-20240719095238514.png" alt="image-20240719095238514" style="zoom:80%;" />
 
+豌豆荚
 
+https://www.wandoujia.com/
 
+方便获取APP历史版本
 
+![image-20240719095250538](image/image-20240719095250538.png)
 
+###### **04关于工具**
 
+https://github.com/wgpsec/ENScan_GO
 
+由狼组安全团队的 Keac 师傅写的专门用来解决企业信息收集难的问题的工具，可以一键收集目标及其控股公司的 ICP 备案、APP、小程序、微信公众号等信息然后聚合导出。
 
+# 7.19
 
+#### 子域名信息
 
+子域名一般是父级域名的下一级。一般企业主站域名的防护都是重点，安全级别较高，突破难度较大，而企业可能会有数十个甚至更多的子域名应用，因为数量众多，安全因素和成本投入多，相应的防护也没有那么及时有效。子域名往往是攻击突破口，通过子域名发现更多的可能性或是进行迂回攻击。
 
+**子域名信息点：**
 
+子域名包含一些常见资产类型：办公系统，邮箱系统，论坛，商城等。而其他管理系统，网站管理后台等较少出现在子域名中。
 
+一般情况下，相同类型漏洞可能存在同一组织的不同的域名/应用程序中。
 
+子域名系统维护成本、用户群体等，一般少于主域名，会存在一些版本迭代、配置不安全、弱密码账号管理策略等。
 
+子域名探测发现更多的服务，增加漏洞发现的可能性。
 
+##### 01枚举爆破
 
+手法介绍
 
+要说简单粗暴还是子域名枚举爆破，通过不断的拼接`字典`中的子域名前缀去枚举域名的A记录进行`DNS解析`，如果成功解析说明子域名存在。如xxx.com拼接前缀test组合成test.xxx.com，再对其进行验证。但是域名如果使用`泛解析`的话，则会导致所有的域名都能成功解析，使得子域名枚举变得不精准。
 
+`nslookup`验证下~
 
+- 泛解析域名，成功解析不存在的域名。
 
+<img src="image/image-20240719103825835.png" alt="image-20240719103825835" style="zoom: 50%;" />
 
+- 普通解析，不存在的域名解析会失败。
 
+<img src="image/image-20240719103902854.png" alt="image-20240719103902854" style="zoom:50%;" />
 
+```
+泛解析：使用通配符 * 来匹配所有的子域名，从而实现所有的子级域名均指向相同网站空间。
 
+会存在域名劫持、域名恶意泛解析风险
 
+会主站被降权，可能被恶意利用，占用大量流量
 
+关于恶意解析：
 
+https://cloud.tencent.com/developer/article/1494534?from=article.detail.1874625
 
+混合泛解析：在泛解析的基础上，增加一个限制，使记录可以按照需求进行分类。
 
+https://cloud.tencent.com/document/product/302/9073
 
+https://github.com/Q2h1Cg/dnsbrute/blob/v2.0/dict/53683.txt)
+```
 
+**关于泛解析**
 
+那么域名使用了泛解析怎么去解决呢？
 
+```
+一般有两种：
 
+黑名单ip：
+通过获取一个不存在的子域名相应解析IP，来记录标记黑名单ip，再爆破字典时，解析到的IP在这个黑名单ip中，则跳过，不存在就继续处理。
+或是记录相同的，保留一到两个。
 
+TTL
+在权威 DNS 中，泛解析记录的 TTL 肯定是相同的，如果子域名记录相同，但 TTL 不同，那这条记录可以说肯定不是泛解析记录。
 
+响应内容
+牺牲速度，先获取一个绝对不存在域名的响应内容，再遍历获取每个字典对应的子域名的响应内容，通过和不存在域名的内容做相似度比对，来枚举子域名。
+```
 
+**枚举爆破常用工具**
 
+在线查询：
 
+- https://phpinfo.me/domain/
+  - 速度不错
+- https://chaziyu.com/
+  - 子域、备案都可以查
+
+其他：
+
+- [Layer 子域名挖掘机](https://github.com/euphrat1ca/LayerDomainFinder)
+
+  - 可视化，取决于字典强度，易上手，就是容易崩溃
+
+- [subDomainsBrute](https://github.com/lijiejie/subDomainsBrute)
+
+  - 老牌DNS爆破工具，稳定快速~
+  - 暂不支持批量
+  - **怼泛解析**：超过10个域名指向同一IP，则此后发现的其他指向该IP的域名将被丢弃，该方法可能存在误删，但简单有效。
+
+- [OneForAll](https://github.com/shmilylty/OneForAll)
+
+  - 收集姿势挺全的，就是依赖多，一直再更新
+  - OneForALL + ESD + JSfinder~~
+  - **怼泛解析**：oneforall会首先访问一个随机的并不存在的域，通过返回结果判断是否存在泛解析，确定存在泛解析以后，程序会开始不断的循环产生随机域名，去向服务器查询，将每次查询到的IP和TTL记录下来，直到大部分的IP地址出现次数都大于两次，则IP黑名单的收集结束，在得到了IP黑名单以后，oneforall接下来会将自己的字典中的每一项和要指定查询的域名进行拼接。在爆破过程中根据IP黑名单进行过滤。但这种宽泛的过滤容易导致漏报，所以oneforall将 TTL 也作为黑名单规则的一部分，评判的依据是：在权威 DNS 中，泛解析记录的 TTL 肯定是相同的，如果子域名记录相同，但 TTL 不同，那这条记录可以说肯定不是泛解析记录。
+
+- [knock](https://github.com/guelfoweb/knock)
+
+  - 支持查询VirusTotal，速度快，结果一般
+  - VirusTotal API绕过泛解析
+
+- [ESD](https://github.com/FeeiCN/ESD)
+
+  - 收集方法多，爆破速度极快，接口少
+  - **怼泛解析**：基于文本相似度过滤泛解析域名
+
+- [**ksubdomain**](https://github.com/boy-hack/ksubdomain)
+
+  - 无状态的子域名爆破工具,支持重放，速度不错
+  - 结合其他工具，一键子域名搜集验证：
+
+  https://cn-sec.com/archives/1178685.html
+
+- [xray 高级版](https://github.com/chaitin/xray/releases)
+
+  - 效率可以，联动很舒服
+
+<img src="image/image-20240719105221779.png" alt="image-20240719105221779" style="zoom:67%;" />
+
+**关于字典**
+
+```
+字典这块引用下https://feei.cn/esd/
+```
+
+**DNS服务商的字典**一般来说最准确有效，如：DNSPod公布的使用最多的子域名：[dnspod-top2000-sub-domains.txt](https://github.com/DNSPod/oh-my-free-data/blob/master/src/dnspod-top2000-sub-domains.txt)
+
+**普通字典**：一些基础组合。
+
+- 单字母：f.feei.cn（大都喜欢短一点的域名，单字符的最为常见）
+- 单字母+单数字：s1.feei.cn
+- 双字母：sd.feei.cn（大都喜欢业务的首字母缩写）
+- 双字母+单数字：ss1.feei.cn
+- 双字母+双数字：ss01.feei.cn
+- 三字母：[www.feei.cn](https://forum.butian.net/share/www.feei.cn)（部分业务名称为三个字）
+- 四字母：webp.feei.cn（部分业务名称为四个字）
+- 单数字：1.feei.cn
+- 双数字：11.feei.cn
+- 三数字：666.feei.cn
+
+**常用词组**：常见的中英文词组。
+
+- fanyi.feei.cn（中）tranlate.feei.cn（英）
+- huiyuan.feei.cn（中）member.feei.cn（英）
+- tupian.feei.cn（中）picture.feei.cn（英）
+
+**爆破工具的字典**: 可结合整理过的字典
+
+- [subbrute](https://github.com/TheRook/subbrute): [names_small.txt](https://github.com/TheRook/subbrute/blob/master/names_small.txt)
+- [subDomainsBrute](https://github.com/lijiejie/subDomainsBrute): [subnames_full.txt](https://github.com/lijiejie/subDomainsBrute/blob/master/dict/subnames_full.txt)
+- [dnsbrute](https://github.com/Q2h1Cg/dnsbrute): [53683.txt](https://github.com/Q2h1Cg/dnsbrute/blob/v2.0/dict/53683.txt)
+
+##### 02DNS传送域
+
+DNS服务器分为：主服务器、备份服务器和缓存服务器。
+
+在主备服务器之间同步数据库，需要使用“DNS域传送”的一种DNS事务。**域传送**是指备份服务器从主服务器上复制数据，然后更新自身的数据库，以达到数据同步的目的，这样是为了增加冗余，一旦主服务器出现问题可直接让备份服务器做好支撑工作。
+
+若DNS配置不当，可能导致匿名用户获取某个域的所有记录。造成整个网络的拓扑结构泄露给潜在的攻击者，包括一些安全性较低的内部主机，如测试服务器。凭借这份网络蓝图，攻击者可以节省很少的扫描时间。
+
+- 错误配置：只要收到`axfr`请求就进行域传送，刷新数据。
+
+**检测方法：**
+
+`axfr` 是q-type类型的一种，axfr类型是`Authoritative Transfer`的缩写，指请求传送某个区域的全部记录。只要欺骗dns服务器发送一个`axfr`请求过去，如果该dns服务器上存在该漏洞，就会返回所有的解析记录值。
+
+nslookup
+
+```
+# 查询nameserver  
+nslookup -type=ns nhtc.wiki 8.8.8.8  
+# 指定nameserver，列举域名信息  
+nslookup  
+# Server 命令参数设定查询将要使用的DNS服务器  
+server cloudy.dnspod.net   
+#  Ls命令列出某个域中的所有域名  
+ls nhtc.wiki
+```
+
+<img src="image/image-20240719110809030.png" alt="image-20240719110809030" style="zoom:80%;" />
+
+无法列出域，不存在此漏洞
+
+**Dig**
+
+```bash
+# 找到NS服务器  
+dig nhtc.wiki ns
+```
+
+<img src="image/image-20240719110938728.png" alt="image-20240719110938728" style="zoom: 67%;" />
+
+```bash
+# 发送axfr请求  
+ dig axfr @cloudy.dnspod.net nhtc.wiki
+```
+
+![image-20240719110959502](image/image-20240719110959502.png)
+
+**其他**
+
+nmap：
+
+```bash
+nmap --script dns-zone-transfer --script-args dns-zone-transfer.domain=nhtc.wiki -p 53 -Pn cloudy.dnspod.net
+```
+
+python
+
+```bash
+# DNS库  
+xfr = dns.query.xfr(where=server, zone=self.domain, timeout=5.0, lifetime=10.0)  
+zone = dns.zone.from\_xfr(xfr) 
+```
+
+一般情况下，DNS服务器配置都正常，关闭了域传送或设置白名单，利用率低。推荐交给自动化。
+
+##### 03证书透明度收集子域
+
+证书透明度（Certificate Transparency）是谷歌力推的一项拟在确保证书系统安全的透明审查技术。其目标是提供一个开放的审计和监控系统，可以让任何[域名](https://dnspod.cloud.tencent.com/)的所有者，确定CA证书是否被错误签发或恶意使用。TLS的缺点是你的浏览器隐性包含了一个大型受信任CA列表。如果任何这些CA恶意为域创建新证书，则你的浏览器都会信任它。CT为TLS证书信任提供了额外的安全保障：即公司可以监控谁为他们拥有的域创建了证书。此外，它还允许浏览器验证给定域的证书是否在公共日志记录中。
+
+————————[Google 的证书透明度项目](https://www.certificate-transparency.org/)
+
+因为证书透明性是开放架构，可以检测由证书颁发机构错误颁发的 SSL 证书，也可以识别恶意颁发证书的证书颁发机构，且任何人都可以构建或访问，CA证书又包含了`域名、子域名、邮箱`等敏感信息，价值就不言而喻了。
+
+**收集方法：**
+
+一般使用 CT 日志搜索引擎进行域名信息收集，因为是日志收集，只增不减，可能会有一些失效域名。
+
+**在线查询：**
+
+- [crtsh](https://crt.sh/)
+
+![image-20240719111453119](image/image-20240719111453119.png)
+
+- [entrust](https://www.entrust.com/ct-search/)
+- [censys](https://censys.io/certificates)
+- [facebook（需要登录）](https://developers.facebook.com/tools/ct/)
+- [spyse](https://spyse.com/search/certificate)
+- [certspotter（每小时免费查100次）](https://sslmate.com/certspotter/api/)
+
+**浏览器查询**
+
+点击浏览器网站小锁-->安全连接-->更多信息-->查看证书-->查看主题替代名称处，有时候会有主域名和子域名信息。
+
+<img src="image/image-20240719111527859.png" alt="image-20240719111527859" style="zoom:67%;" />
+
+<img src="image/image-20240719111541188.png" alt="image-20240719111541188" style="zoom:80%;" />
+
+**工具：**
+
+- [ctfr](https://github.com/UnaPibaGeek/ctfr)
+- [OneForAll](https://github.com/shmilylty/OneForAll)
+
+##### 04公开数据集
+
+利用已有公开的全网扫描数据集，对子域名信息进行收集。
+
+- [Rapid7的开源数据项目](https://opendata.rapid7.com/)
+- [threatcrowd](https://www.threatcrowd.org/)
+
+收集方法：
+
+- [Find DNS Host Records (Subdomains) | hackertarget](https://hackertarget.com/find-dns-host-records/)
+- [netcraft](https://searchdns.netcraft.com/)
+- 命令进行快速查找
+
+```bash
+wget https://scans.io/data/rapid7/sonar.fdns\_v2/20170417-fdns.json.gz  
+cat 20170417\-fdns.json.gz | pigz \-dc | grep ".target.org" | jq\`
+```
+
+##### 05第三方聚合服务
+
+通过第三方平台提供的一些服务，快速发现子域名信息。
+
+- [VirusTotal](https://www.virustotal.com/gui/home/search)
+
+> VirusTotal会运行DNS复制功能，通过存储用户访问URL时执行的DNS解析来构建数据库。
+
+<img src="image/image-20240719111637106.png" alt="image-20240719111637106" style="zoom:67%;" />
+
+- [Find DNS Host Records | Subdomain Finder | HackerTarget.com](https://hackertarget.com/find-dns-host-records/)
+- [netcraft](https://searchdns.netcraft.com/)
+- [DNSdumpster.com](https://dnsdumpster.com/)
+- [域名查iP 域名解析 iP查询网站 iP反查域名 iP反查网站 同一iP网站 同iP网站域名iP查询](https://site.ip138.com/)
+- [threatminer](https://www.threatminer.org/index.php)
+- [Subdomain Finder](https://spyse.com/tools/subdomain-finder)
+- [threatbook（需要高级权限）](https://x.threatbook.cn/)
+- [子域名查询 - 站长工具（需要登录）](http://tool.chinaz.com/subdomain/?domain=)
+- [namecheap](https://decoder.link/)
+- 其他工具：
+  - [Sublist3r](https://github.com/aboul3la/Sublist3r)
+  - [OneForAll](https://github.com/shmilylty/OneForAll)
+
+##### 06搜索引擎
+
+**介绍**
+
+搜索引擎是用于查找和排名与用户搜索匹配的 Web 内容的工具。
+
+搜索引擎通过“蜘蛛”对全网进行大量爬行并处理后，建立索引*（索引是将抓取页面中的信息添加到叫做搜索索引的大型数据库中。）*。在此期间往往收集了大量的域名信息，需要对应的语法，即可从这数据库中获取想要的信息。
+
+**搜索方法：**
+
+**主流搜索引擎**
+
+一份国外调查表：
+
+<img src="image/image-20240719111746842.png" alt="image-20240719111746842" style="zoom:80%;" />
+
+**Goolge：**
+
+俗称Google Hacking 大法，有十几种语法，混合使用可以更加准确地查找信息。
+
+- Google检索技巧大全: [https://sites.google.com/site/hopeanwang/google%E6%A3%80%E7%B4%A2%E6%8A%80%E5%B7%A7%E5%A4%A7%E5%85%A8](https://sites.google.com/site/hopeanwang/google检索技巧大全)
+
+**搜索子域名信息**
+
+```php
+site:360.cn
+```
+
+<img src="image/image-20240719111838198.png" alt="image-20240719111838198" style="zoom:67%;" />
+
+**搜索一个域名后台信息**
+
+```php
+site:xx.com inurl:id=1  intext:后台 
+```
+
+<img src="image/image-20240719111859430.png" alt="image-20240719111859430" style="zoom:80%;" />
+
+**网络空间引擎**
+
+[fofa](https://fofa.info/)
+
+FOFA是白帽汇推出的一款网络空间搜索引擎，它通过进行网络空间测绘，能够帮助研究人员或者企业迅速进行网络资产匹配，例如进行[漏洞](https://www.77169.net/ld)影响范围分析、应用分布统计、应用流行度排名统计等。
+
+| 逻辑连接符 | 具体含义                                      |
+| :--------- | :-------------------------------------------- |
+| \=         | 匹配，=""时，可查询不存在字段或者值为空的情况 |
+| \=\=       | 完全匹配，==""时，可查询存在且值为空的情况    |
+| &&         | 与                                            |
+| \|         | 或者                                          |
+| !\=        | 不匹配，!\=""时，可查询值为空的情况           |
+| ~\=        | 正则语法匹配专用（高级会员独有，不支持body）  |
+| ()         | 确认查询优先级，括号内容优先级最高            |
+
+目前FOFA支持了多个网络组件的指纹识别，包括建站模块、分享模块、各种开发框架、安全监测平台、项目管理系统、企业管理系统、视频监控系统、站长平台、电商系统、广告联盟、前端库、路由器、SSL证书、服务器管理系统、CDN、Web服务器、WAF、CMS等等，详细信息见https://fofa.info/library
+
+**常用语法可通过”查询语法“功能获取：**
+
+https://fofa.info/
+
+例句(点击可去搜索)用途说明注
+
+| 例句(点击可去搜索)                                           | 用途说明                                           | 注                                                    |
+| :----------------------------------------------------------- | :------------------------------------------------- | :---------------------------------------------------- |
+| [title="beijing"](https://fofa.so/result?qbase64=dGl0bGU9ImJlaWppbmci) | 从标题中搜索“北京”                                 | -                                                     |
+| [header="jboss"](https://fofa.so/result?qbase64=aGVhZGVyPSJqYm9zcyI%3D) | 从http头中搜索“jboss”                              | -                                                     |
+| [body="Hacked by"](https://fofa.so/result?qbase64=Ym9keT0iSGFja2VkIGJ5Ig%3D%3D) | 从html正文中搜索abc                                | -                                                     |
+| [domain="qq.com"](https://fofa.so/result?qbase64=ZG9tYWluPSJxcS5jb20i) | 搜索根域名带有qq.com的网站。                       | -                                                     |
+| [icon_hash="-247388890"](https://fofa.so/result?qbase64=aWNvbl9oYXNoPSItMjQ3Mzg4ODkwIg%3D%3D) | 搜索使用此icon的资产。                             | 仅限高级会员使用                                      |
+| [host=".gov.cn"](https://fofa.so/result?qbase64=aG9zdD0iLmdvdi5jbiI%3D) | 从url中搜索”.gov.cn”                               | 搜索要用host作为名称                                  |
+| [port="443"](https://fofa.so/result?qbase64=cG9ydD0iNDQzIg%3D%3D) | 查找对应“443”端口的资产                            | -                                                     |
+| [ip="1.1.1.1"](https://fofa.so/result?qbase64=aXA9IjEuMS4xLjEi) | 从ip中搜索包含“1.1.1.1”的网站                      | 搜索要用ip作为名称                                    |
+| [ip="220.181.111.1/24"](https://fofa.so/result?qbase64=aXA9IjIyMC4xODEuMTExLjEvMjQi) | 查询IP为“220.181.111.1”的C网段资产                 | -                                                     |
+| [status_code="402"](https://fofa.so/result?qbase64=c3RhdHVzX2NvZGU9NDAy) | 查询服务器状态为“402”的资产                        | -                                                     |
+| [protocol="https"](https://fofa.so/result?qbase64=cHJvdG9jb2w9Imh0dHBzIg%3D%3D) | 查询https协议资产                                  | 搜索指定协议类型(在开启端口扫描的情况下有效)          |
+| [city="Hangzhou"](https://fofa.so/result?qbase64=Y2l0eT0iSGFuZ3pob3Ui) | 搜索指定城市的资产。                               | -                                                     |
+| [region="Zhejiang"](https://fofa.so/result?qbase64=cmVnaW9uPSJaaGVqaWFuZyI%3D) | 搜索指定行政区的资产。                             | -                                                     |
+| [country="CN"](https://fofa.so/result?qbase64=Y291bnRyeT0iQ04i) | 搜索指定国家(编码)的资产。                         | -                                                     |
+| [cert="google"](https://fofa.so/result?qbase64=Y2VydD0iZ29vZ2xlIg%3D%3D) | 搜索证书(https或者imaps等)中带有google的资产。     | -                                                     |
+| [banner=users && protocol=ftp](https://fofa.so/result?qbase64=YmFubmVyPXVzZXJzICYmIHByb3RvY29sPWZ0cA%3D%3D) | 搜索FTP协议中带有users文本的资产。                 | -                                                     |
+| [type=service](https://fofa.so/result?qbase64=dHlwZT1zZXJ2aWNl) | 搜索所有协议资产，支持subdomain和service两种。     | 搜索所有协议资产                                      |
+| [os=windows](https://fofa.so/result?qbase64=b3M9d2luZG93cw%3D%3D) | 搜索Windows资产。                                  | -                                                     |
+| [server=="Microsoft-IIS/7.5"](https://fofa.so/result?qbase64=c2VydmVyPT0iTWljcm9zb2Z0LUlJUy83LjUi) | 搜索IIS 7.5服务器。                                | -                                                     |
+| [app="HIKVISION-视频监控"](https://fofa.so/result?qbase64=YXBwPSJISUtWSVNJT04t6KeG6aKR55uR5o6nIg%3D%3D) | 搜索海康威视设备                                   | -                                                     |
+| [after="2017" && before="2017-10-01"](https://fofa.so/result?qbase64=YWZ0ZXI9IjIwMTciICZhbXA7JmFtcDsgYmVmb3JlPSIyMDE3LTEwLTAxIg%3D%3D) | 时间范围段搜索                                     | -                                                     |
+| [asn="19551"](https://fofa.so/result?qbase64=YXNuPSIxOTU1MSI%3D) | 搜索指定asn的资产。                                | -                                                     |
+| [org="Amazon.com, Inc."](https://fofa.so/result?qbase64=b3JnPSJBbWF6b24uY29tLCBJbmMuIg%3D%3D) | 搜索指定org(组织)的资产。                          | -                                                     |
+| [base_protocol="udp"](https://fofa.so/result?qbase64=YmFzZV9wcm90b2NvbD0idWRwIg%3D%3D) | 搜索指定udp协议的资产。                            | -                                                     |
+| [is_ipv6=true](https://fofa.so/result?qbase64=aXNfaXB2Nj10cnVl) | 搜索ipv6的资产                                     | 搜索ipv6的资产,只接受true和false。                    |
+| [is_domain=true](https://fofa.so/result?qbase64=aXNfZG9tYWluPXRydWU%3D) | 搜索域名的资产                                     | 搜索域名的资产,只接受true和false。                    |
+| [ip_ports="80,161"](https://fofa.so/result?qbase64=aXBfcG9ydHM9IjgwLDE2MSI%3D) | 搜索同时开放80和161端口的ip                        | 搜索同时开放80和161端口的ip资产(以ip为单位的资产数据) |
+| [port_size="6"](https://fofa.so/result?qbase64=cG9ydF9zaXplPSI2Ig%3D%3D) | 查询开放端口数量等于"6"的资产                      | 仅限FOFA会员使用                                      |
+| [port_size_gt="3"](https://fofa.so/result?qbase64=cG9ydF9zaXplX2d0PSIzIg%3D%3D) | 查询开放端口数量大于"3"的资产                      | 仅限FOFA会员使用                                      |
+| [port_size_lt="12"](https://fofa.so/result?qbase64=cG9ydF9zaXplX2x0PSIxMiI%3D) | 查询开放端口数量小于"12"的资产                     | 仅限FOFA会员使用                                      |
+| [ip_country="CN"](https://fofa.so/result?qbase64=aXBfY291bnRyeT0iQ04i) | 搜索中国的ip资产(以ip为单位的资产数据)。           | 搜索中国的ip资产                                      |
+| [ip_region="Zhejiang"](https://fofa.so/result?qbase64=aXBfcmVnaW9uPSJaaGVqaWFuZyI%3D) | 搜索指定行政区的ip资产(以ip为单位的资产数据)。     | 搜索指定行政区的资产                                  |
+| [ip_city="Hangzhou"](https://fofa.so/result?qbase64=aXBfY2l0eT0iSGFuZ3pob3Ui) | 搜索指定城市的ip资产(以ip为单位的资产数据)。       | 搜索指定城市的资产                                    |
+| [ip_after="2019-01-01"](https://fofa.so/result?qbase64=aXBfYWZ0ZXI9IjIwMTktMDEtMDEi) | 搜索2019-01-01以后的ip资产(以ip为单位的资产数据)。 | 搜索2019-01-01以后的ip资产                            |
+| [ip_before="2019-07-01"](https://fofa.so/result?qbase64=aXBfYmVmb3JlPSIyMDE5LTA3LTAxIg%3D%3D) | 搜索2019-07-01以前的ip资产(以ip为单位的资产数据)。 | 搜索2019-07-01以前的ip资产                            |
+
+基础了解后，可以试试规则专题，官方有提供相应的指纹、组件查找，包含“数据库专题”、“工控专题”和“区块链专题”。也可以自己提交。
+
+- https://fofa.info/library
+
+<img src="image/image-20240719112020031.png" alt="image-20240719112020031" style="zoom:80%;" />
+
+- 查询”致远互联-OA“系统：
+
+<img src="image/image-20240719112024465.png" alt="image-20240719112024465" style="zoom:80%;" />
+
+[Shodan](https://www.shodan.io/)
+
+Shodan是一个搜索接入互联网的设备的搜索引擎，2009年由约翰·马瑟利发布。学生会员可以每个月下载1w条数据，黑五可能会有优惠价格。
+
+> ps：Shodan 侧重于主机设备
+
+- [规则列表](https://www.shodan.io/explore)
+
+<img src="image/image-20240719112051561.png" alt="image-20240719112051561" style="zoom: 67%;" />
+
+[**0.zone**](https://0.zone/)
+
+它是一个免费的外部攻击面管理SaaS平台，供红蓝队使用，为防御者提供攻击者视角下的企业外部攻击面数据，减少攻防信息差，以促进企业攻击面的收敛和管理。
+
+- [语法参考](https://0.zone/grammarList)
+
+<img src="image/image-20240719112124559.png" alt="image-20240719112124559" style="zoom:67%;" />
+
+**搜索企业名称示例**（需要会员才能获取企业黄页）
+
+可查看此公司下匹配到的信息系统、移动端应用、敏感目录、邮箱、文档、代码、人员信息数据。这个功能定向查找单位资产非常方便好用。
+
+<img src="image/image-20240719112142515.png" alt="image-20240719112142515" style="zoom:80%;" />
+
+不同于fofa，该平台做了收录信息归纳，感觉还不错。
+
+- 使用参考：https://mp.weixin.qq.com/s/0Nf_HJr-Rn4mZEC3QYKtwg
+
+[hunter](https://hunter.qianxin.com/)
+
+全球鹰是奇安信的一款产品。通过网络空间测绘技术，全球鹰测绘平台可以提供IP、域名、开放端口、应用/组件、所属企业等关键安全信息，同时结合攻防场景绘制了资产画像与IP画像，实现互联网资产的可查、可定位、操作可识别的检索，助力企业日常的安全运营工作，例如未知资产发现、风险识别、漏洞修复等。目前全球鹰网络空间测绘平台已有3亿独立IP，资产(剔除历史重复数据)总数超过20亿，已实现全端口覆盖。在全球我们已覆盖了261个国家，96% ASN域。国内web资产最快4天更新，最慢7天更新。
+
+[语法参考](https://hunter.qianxin.com/)
+
+<img src="image/image-20240719112203639.png" alt="image-20240719112203639" style="zoom:80%;" />
+
+其他
+
+还有一些不错的检索平台，就不一一介绍，可以去官网瞧瞧语法和规则这块，这块还是api用得多。*（没会员没法爽玩。。）*
+
+- [zoomeye](https://www.zoomeye.org/)
+- [quake](https://quake.360.cn/)
+- [谛听](https://www.ditecting.com/)
+- [知风](https://zhifeng.io/web/new/)
+- [binaryedge](https://www.binaryedge.io/)
+- [censys](https://search.censys.io/)
+- [dnsdb](https://dnsdb.io/zh-cn/)
+- [greynoise](https://www.greynoise.io/blog)
+- [hunter](https://hunter.io/)
+- [Project Sonar](https://opendata.rapid7.com/)
+- [intelx](https://intelx.io/)
+- [dnsdumpster](https://dnsdumpster.com/)
+- phonebook.cz
+- [fullhunt](https://fullhunt.io/)
+- [netlas](https://netlas.io/)
+
+关于搜索引擎详细可以参考下：
+
+- [网络空间检索平台对比](https://www.cnblogs.com/Akkuman/p/15469098.html)
+- [零零信安攻击面管理系统 | 企业信息泄露情报平台](https://www.iculture.cc/cybersecurity/pig=16553)
+- [盘点一下在渗透测试中可能用到的网络搜索引擎](https://www.77169.net/html/289075.html)
+
+##### 07工具自动化
+
+总的来说，信息收集有很多重复性查询筛选，手工相对费时费力，因此可以借助半自动化工具来达到事半功倍的效果。
+
+**OneForAll**
+
+> https://github.com/shmilylty/OneForAll
+
+解决大多传统子域名收集工具不够强大、不够友好、缺少维护和效率问题的痛点，是一款集百家之长，功能强大的全面快速子域收集终极神器。
+
+**subfinder**
+
+> https://github.com/projectdiscovery/subfinder
+
+brew install subfinder
+
+Subfinder 是一个子域发现工具，它通过使用被动在线资源来发现网站的有效子域。它具有简单的模块化架构，并针对速度进行了优化。 subfinder 是为只做一件事而构建的——被动子域枚举，它做得很好。
+
+**ksubdomain**
+
+> https://github.com/knownsec/ksubdomain
+
+ksubdomain是一款基于无状态子域名爆破工具，支持在Windows/Linux/Mac上使用，它会很快的进行DNS爆破，在Mac和Windows上理论最大发包速度在30w/s,linux上为160w/s的速度。
+
+**JSINFO-SCAN**
+
+> https://github.com/p1g3/JSINFO-SCAN
+
+递归爬取域名(netloc/domain)，以及递归从JS中获取信息的工具
+
+**URLFinder**
+
+> https://github.com/pingc0y/URLFinder
+
+URLFinder是一款用于快速提取检测页面中JS与URL的工具。
+
+功能类似于JSFinder，但JSFinder好久没更新了。
+
+Layer**子域名挖掘机**
+
+> https://github.com/euphrat1ca/LayerDomainFinder
+
+Layer子域名挖掘机是一款子域名收集工具，拥有简洁的界面和简单的操作模式，支持服务接口查询和暴力枚举获取子域名信息，同时可以通过已获取的域名进行递归爆破。
+
+**ESD**
+
+> https://github.com/FeeiCN/ESD
+
+支持泛解析功能较全的枚举子域工具
+
+**EyeWitness**
+
+> https://github.com/FortyNorthSecurity/EyeWitness
+
+Eyewitness可自动查询URL对应网站的截图、RDP服务、Open VNC服务器以及一些服务器title、甚至是可识别的默认凭据等，最终会生成一个详细的html报告。
+
+## IP信息搜集
+
+通过ip或域名获取到一些基本信息（端口、服务、架构、目录等）后，也可以通过ip段目标扩大攻击面，也有可能找到一些未分配的边缘资产。
+
+### 01绕过cdn获取真实ip
+
+CDN是IP信息探测或打点必不可绕过的一个话题。当目标使用了CDN加速，获取到的目标ip不一定是真实ip。所以通常在实施端口、漏扫等测试之前，需判断下是否真实IP，是否使用了CDN或其他代理等等，避免无效操作、蜜罐、非目标点。
+
+```
+CDN的全称是Content Delivery Network，即内容分发网络。其基本思路是尽可能避开互联网上有可能影响数据传输速度和稳定性的瓶颈和环节，使内容传输的更快、更稳定。通过在网络各处放置节点服务器所构成的在现有的互联网基础之上的一层智能虚拟网络，CDN系统能够实时地根据网络流量和各节点的连接、负载状况以及到用户的距离和响应时间等综合信息将用户的请求重新导向离用户最近的服务节点上。其目的是使用户可就近取得所需内容，解决 Internet网络拥挤的状况，提高用户访问网站的响应速度。
+```
+
+#### 常见CDN服务商
+
+**一、国内 CDN 服务商**
+
+- 阿里云 CDN
+- 百度云 CDN
+- 七牛云 CDN
+- 又拍云 CDN
+- 腾讯云 CDN
+- Ucloud
+- 360 CDN
+- 网宿科技
+- ChinaCache
+- 帝联科技
+
+**二、国外 CDN 服务商**
+
+- CloudFlare
+- StackPath
+- Fastly
+- Akamai
+- CloudFront
+- Edgecast
+- CDNetworks
+- Google Cloud CDN
+- CacheFly
+- Keycdn
+- Udomain
+- CDN77
+
+#### CDN判断
+
+确定CDN加速解析后，那就要考虑如何绕过来获取真实ip，以进一步攻击利用。
+
+##### 0x01 多ping
+
+通过多地ping目标域名，如果没有使用CDN，只会显示一个IP地址，或者双线接入情况的两个不同运营商ip。
+
+多ping在线站点：
+
+- http://ping.chinaz.com/
+- https://ping.aizhan.com/
+- http://www.webkaka.com/Ping.aspx
+- https://www.host-tracker.com/v3/check/
+
+如图，不同地区访问有不同ip，一般存在CDN：
+
+<img src="image/image-20240719112940726.png" alt="image-20240719112940726" style="zoom:80%;" />
+
+##### 0x02 nslookup
+
+获取到的DNS域名解析结果中返回多个ip的，一般都是存在CDN服务。
+
+<img src="image/image-20240719113016856.png" alt="image-20240719113016856" style="zoom:80%;" />
+
+##### 0x03 header头信息
+
+- 请求响应包header头中是否存在cdn服务商信息
+- 报错信息
+- 若 asp 或者 asp.net 网站返回头的 server 不是 IIS、而是 Nginx，则多半使用了nginx反向代理到 CDN
+
+<img src="image/image-20240719144056876.png" alt="image-20240719144056876" style="zoom:80%;" />
+
+##### 0x04 在线检测工具
+
+- https://www.cdnplanet.com/tools/cdnfinder/
+- https://tools.ipip.net/cdn.php
+- https://whatsmycdn.com/
+
+<img src="image/image-20240719144215246.png" alt="image-20240719144215246" style="zoom:67%;" />
+
+#### 获取真实IP
+
+##### 0x01 dns历史绑定记录
+
+查询域名历史解析记录，可**能会存在未使用cdn之前的真实ip**记录：
+
+- https://dnsdb.io/zh-cn/
+- https://securitytrails.com/
+- https://x.threatbook.cn/
+- http://toolbar.netcraft.com/site_report?url=
+- https://viewdns.info/iphistory/?domain=
+- https://site.ip138.com/www.xxx.com/
+
+CDN判断：
+
+<img src="image/image-20240719144630503.png" alt="image-20240719144630503" style="zoom:80%;" />
+
+存在CDN，利用微步查询获取历史记录，然后将每个ip都测试一篇
+
+<img src="image/image-20240719144941574.png" alt="image-20240719144941574" style="zoom:80%;" />
+
+通过源代码获取，确定真实ip
+
+<img src="image/image-20240719145241933.png" alt="image-20240719145241933" style="zoom:80%;" />
+
+##### 0x02 **网络空间测绘搜索引擎**
+
+> 网络空间测绘，一般都会定时把全网资产扫一遍存在数据库里。
+
+通过网络空间测绘搜索引擎搜索其收录的目标相关信息，有概率获取到目标真实IP。
+
+- [fofa](https://fofa.so/)
+- [shodan](https://www.shodan.io/)
+- [quake](https://quake.360.cn/quake/#/index)
+- [Censys.io](https://censys.io/)
+
+大概从以下几个关键因素去搜索验证：
+
+- ip
+- 域名
+- title
+- logo
+- icp
+- body
+- js/css/html等静态特征值
+
+<img src="image/image-20240719145452707.png" alt="image-20240719145452707" style="zoom:80%;" />
+
+通过获取logo icon指纹哈希特征，搜索其相同的主机结果，进一步探测真实IP：
+
+<img src="image/image-20240719150833038.png" alt="image-20240719150833038" style="zoom:80%;" />
+
+<img src="image/image-20240719151130581.png" alt="image-20240719151130581" style="zoom:80%;" />
+
+##### 0x03 子域名
+
+考虑到CDN成本问题，一些重要站点会采用cdn加速，而一些子域名则没有使用。一般情况下，一些子域名与主站的真实ip在同一c段或同一台服务器上，这时就可以通过发现子域名c段ip、端口信息，逐个探测定位主站真实ip地址。
+
+常见查找方法和工具：
+
+- [各大搜索引擎](http://sousuo.org.cn/)
+- [微步在线](https://x.threatbook.cn/)
+- [oneforall](https://github.com/shmilylty/OneForAll)
+- [ksubdomain](https://github.com/knownsec/ksubdomain)
+- [Jsinfo-scan](https://github.com/p1g3/JSINFO-SCAN)
+
+##### 0x04 异地ping
+
+部分国内cdn广商只做了国内的线路，而没有铺设对国外的线路，这时就可以通过海外解析直接获取到真实IP。
+
+可以使用：
+
+部分国内cdn广商只做了国内的线路，而没有铺设对国外的线路，这时就可以通过海外解析直接获取到真实IP。
+
+可以使用：
+
+- http://ping.chinaz.com/
+- https://asm.ca.com/zh_cn/ping.php
+- http://host-tracker.com/
+- http://www.webpagetest.org/
+- https://dnscheck.pingdom.com/
+- https://www.host-tracker.com/v3/check/
+
+<img src="image/image-20240719151251875.png" alt="image-20240719151251875" style="zoom:80%;" />
+
+##### 0x05 SSL证书
+
+证书颁发机构 (CA) 必须将他们发布的每个 SSL/TLS 证书发布到公共日志中，SSL/TLS 证书通常包含域名、子域名和电子邮件地址。因此可以利用 SSL/TLS 证书来发现目标站点的真实 IP 地址。
+
+CDN在提供保护的同时，也会与服务器之间进行加密通信（SSL）。当通过服443端口去访问服务器ip或域名时，就会暴露其SSL证书，也就可以通过证书比对发现服务器的真实IP地址。
+
+**在线：**
+
+- https://crt.sh/
+
+通过 [https://crt.sh](https://crt.sh/) 进行快速证书查询收集
+
+<img src="image/image-20240719151430695.png" alt="image-20240719151430695" style="zoom:80%;" />
+
+- [Censys 引擎](https://censys.io/)
+
+  Censys 搜索引擎能够扫描整个互联网，每天都会扫描 IPv4 地址空间，以搜索所有联网设备并收集相关的信息，可以利用 Censys 进行全网方面的 SSL 证书搜索，找到匹配的真实 IP 。
+
+通过Censys引擎搜索证书信息，发现多个有效或无效的证书：
+
+https://search.censys.io/certificates?q=www.roken-niji.jp
+
+> ps: 并不是有效的证书才是有价值的，无效的证书中也会有很多服务器配置错误依然保留着的信息。
+
+<img src="image/image-20240719151800865.png" alt="image-20240719151800865" style="zoom:80%;" />
+
+精准定位有效SSL证书：
+
+```bash
+parsed.names: xxx.com and tags.raw: trusted
+```
+
+<img src="image/image-20240719151828273.png" alt="image-20240719151828273" style="zoom:80%;" />
+
+逐个打开，根据sha1签名反查主机
+
+<img src="image/image-20240719151854493.png" alt="image-20240719151854493" style="zoom:80%;" />
+
+无果
+
+<img src="image/image-20240719151914219.png" alt="image-20240719151914219" style="zoom:80%;" />
+
+**命令行**
+
+- openssl
+
+```bash
+openssl s\_client -connect roken-niji.jp:443 | grep subject
+```
+
+<img src="image/image-20240719151943364.png" alt="image-20240719151943364" style="zoom:67%;" />
+
+- curl
+
+```bash
+curl -v https://www.roken-niji.jp/ | grep 'subject'
+```
+
+工具：
+
+```
+CloudFlair
+```
+
+项目地址：https://github.com/christophetd/CloudFlair
+
+> 使用来自 Censys 的全网扫描数据查找 CloudFlare 背后网站的源服务器。
+
+##### 0x06 敏感文件泄露
+
+包括但不限于：
+
+- 服务器日志文件
+- 探针文件，例如 phpinfo
+- 网站备份压缩文件
+- .DS_Store
+- .hg
+- .git
+- SVN
+- Web.xml
+
+![image-20240719152459651](image/image-20240719152459651.png)
+
+##### 0x07 CDN配置问题
+
+某些站点只做了www cname到CDN上，导致[www.xxx.com](https://forum.butian.net/share/www.xxx.com)和xxx.com是两条独立的解析记录，所以可以通过直接ping域名xxx.com获取到未加入cdn的真实IP，同理http协议和https协议配置也是有可能出现这种问题。
+
+##### 0x08 漏洞
+
+- 网站本身存在一些漏洞时，如XSS/SSRF/XXE/命令执行等，通过带外服务器地址注入，使服务器主动连接，被动获取连接记录。
+- 部分本身功能，如url采集、远程url图片、编辑器问题等。
+- 异常信息、调式信息等都有可能泄露真实IP或内网ip的。
+  - ThinkPHP 报错/SpringBoot变量/phpinfo
+
+<img src="image/image-20240719152550569.png" alt="image-20240719152550569" style="zoom:80%;" />
+
+##### 0x09 邮件头信息
+
+一般邮件系统都在内部，没有经过CDN解析，通过邮件发送、RSS订阅等sendmail功能去获取到服务器与邮箱系统交互的邮件源码，在源文件头信息或者源代码中就会包含服务器真实ip。但需注意该ip是否第三方邮件服务器（如腾讯企业邮件、阿里企业邮箱），一般只有应用与网站在同一服务器上时，才获取到当前服务器的真实ip。
+
+常见交互功能点：
+
+- RSS 订阅
+- 邮箱注册、激活处
+- 邮箱找回密码处
+- 产品更新的邮件推送
+- 某业务执行后发送的邮件通知
+- 员工邮箱、邮件管理平台等入口处的忘记密码
+
+可以通过查mx记录确定下是否第三方邮件服务器，当然这里这个邮箱很明显了。。
+
+![image-20240719152741539](image/image-20240719152741539.png)
+
+- 大佬分享的`奇淫技巧`：通过发送邮件给一个不存在的邮箱地址，比如 [000xxx@domain.com](mailto:000xxx@domain.com) ，因为该用户不存在，所以发送将失败，并且还会收到一个包含发送该电子邮件给你的服务器的真实 IP 通知。
+- foxmail导出的邮件可以用编辑器打开查看其内容。
+
+##### 0x10 vhost碰撞
+
+只要字典够强大，数据够多，通过 IP 和子域的碰撞，总会有所收获。
+
+在线工具：
+
+https://pentest-tools.com/information-gathering/find-virtual-hosts#
+
+##### 0x11 应用程序
+
+一些app、小程序会直接采用ip进行通信交互，也可以通过一些历史版本探测真实ip。
+
+##### 0x12 **通过 F5 LTM 解码**
+
+> 一般常用的负载均衡实现方式：
+>
+> - 基于cookie的会话保持
+> - 基于session的会话保持，如weblogic的session复制机制
+> - 基于四层的负载，ip+端口。
+
+- LTM 是将所有的应用请求分配到多个节点服务器上。提高业务的处理能力，也就是负载均衡。F5 LTM也就是5公司旗下的一种负载均衡方案。
+- 当服务器使用 F5 LTM 做负载均衡时，通过对 `set-cookie` 关键字的解码，可以获取服务器真实 ip 地址。
+
+**例如：基于cookie会话保持情况：**
+
+F5在获取到客户端第一次请求时，会使用set cookie头，给客户端标记一个特定的cookie。
+
+```http
+Set-Cookie: BIGipServerPool-i-am-na\_tcp443=2388933130.64288.0000; path=/;
+```
+
+后续客户端请求时，F5都会去校验cookie中得字段，判断交给那个服务器处理。那么就可以利用此机制，获取处理服务器的ip地址，大概率也是网站服务器真实ip。具体解法如下：
+
+- 先把第一小节的十进制数，即 2388933130 取出来
+- 将其转为十六进制数 8e643a0a
+- 接着从后至前，取四个字节出来：0a.3a.64.8e
+- 最后依次转为十进制数 10.58.100.142，即是服务器的真实ip地址。
+
+一般来说基本都是内网ip，但也有例外，得看部署情况，无意间找到一个：
+
+```http
+Set-Cookie: BIGipServerpool-shibboleth3-dev-8080=3045805720.36895.0000; path=/; Httponly
+```
+
+自动化解码工具：
+
+https://github.com/ezelf/f5_cookieLeaks
+
+```http
+Set-Cookie: BIGipServerpool-shibboleth3-dev-8080=3045805720.36895.0000; path=/; Httponly
+```
+
+##### 0x13 其他
+
+- 扫全网
+  - https://github.com/superfish9/hackcdn
+  - https://github.com/boy-hack/w8fuckcdn
+- 流量攻击
+  - 对不设防的CDN发起大量访问，导致出错或服务器更换时可能会泄露真实ip。
+- 长期关注
+  - 定期访问记录ip变化，业务变更或架构调整可能会有更换服务器更换ip的情况。
+- 流量包问题
+  - 部分开发者会将真实ip记录到一些header响应头或者响应包中。
+- 403绕过
+  - 当目标地址放在标头（如Location头）中时，可通过抓包将http协议改为1.0并将请求中除第一行外的所有数据删掉，再发送请求有机会再相应包中Location头获取到真实ip地址。
+  - ……
+
+更多方法可以参考binmaker大佬的总结：
+
+[渗透测试中最全的CDN绕过总结](https://mp.weixin.qq.com/s?__biz=MzIzNzMxMDkxNw==&mid=2247490046&idx=1&sn=994fc288c54907e7317c6818e2e2507b&chksm=e8cbdf54dfbc5642dd5ac26de38bfcf5749614d5bf6ba5bb61cb9078a59027d6ee7f5e183ad1#rd)
+
+### 02组织IP段
+
+当目标信息比较笼统时，可以通过IP地址注册信息查询运营商给目标组织所分配的ip段信息，继而对这个段进行测试。这样既可以扩大范围也有可能直接找到CDN后的真实服务器。
+
+- [CNNIC IP地址注册信息查询系统](https://ipwhois.cnnic.net.cn/)
+
+<img src="image/image-20240719154809803.png" alt="image-20240719154809803" style="zoom:80%;" />
+
+- [RIPE 数据库](https://apps.db.ripe.net/)
+
+以阿里为例，收集组织对应ip信息
+
+<img src="image/image-20240719154902117.png" alt="image-20240719154902117" style="zoom:80%;" />
+
+- [Hurricane Electric BGP Toolkit](https://bgp.he.net/)
+
+<img src="image/image-20240719154925604.png" alt="image-20240719154925604" style="zoom:80%;" />
+
+### 03C段
+
+一般都是扫C段为主，B段为辅。通过获取同在一个ip段的同类型网站或业务来扩大攻击面，往往同ip段中会存在一些后台、api相关处理服务等。
+
+#### C段主要收集点：
+
+- ip
+- 端口
+- 容器类型
+- title
+
+#### 扫描常用工具：
+
+##### 网络空间搜索引擎（fofa、quake...)
+
+> ps: 手工扫描都是实时的，相比空间搜索引擎较精准些。
+
+##### nmap
+
+- 工具强大，速度有待优化。
+- 六种扫描结果
+  - open(开放的)
+  - filtered(被过滤的)
+  - open|filtered(开放或者被过滤的)
+  - closed(关闭的)
+  - closed|filtered(关闭或者被过滤的)
+  - unfiltered(未被过滤的)
+- 常用命令
+
+```bash
+nmap -vvv -Pn -p- ip/24 -n -T4  
+#-v 输出详细信息，-v/-vv/-vvv v越多信息越详细 上线3个v  
+#-Pn 扫描时不用ping  
+#-p-  扫描所有端口（65535个）。如果不使用 -p- ，nmap 将仅扫描1000个端口，GUI参数不可用  
+#-n 不做DNS解析  
+#-T4 设置时间模板,0-5部分做了扫描时间优化，默认3未作优化。4加速扫描又保持一定准确性
+```
+
+- 扫描全端口，并调用各种脚本
+
+```bash
+#!/usr/bin/env bash   
+
+read -p "ip: " ip  
+nmap -v -Pn -p- --open -sV $ip -n -T4 --max-scan-delay 10 --max-retries 3 --min-hostgroup 10 -oX $ip-result-\`date +%y-%m-%d-%H-%M-%S\`.xml --script=dns-zone-transfer,ftp-anon,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221,http-backup-finder,http-cisco-anyconnect,http-iis-short-name-brute,http-put,http-php-version,http-shellshock,http-robots.txt,http-svn-enum,http-webdav-scan,iax2-version,memcached-info,mongodb-info,msrpc-enum,ms-sql-info,mysql-info,nrpe-enum,pptp-version,redis-info,rpcinfo,samba-vuln-cve-2012-1182,smb-vuln-ms08-067,smb-vuln-ms17-010,snmp-info,sshv1,xmpp-info,tftp-enum,teamspeak2-version,ftp-brute,imap-brute,smtp-brute,pop3-brute,mongodb-brute,redis-brute,ms-sql-brute,rlogin-brute,rsync-brute,mysql-brute,pgsql-brute,oracle-sid-brute,oracle-brute,rtsp-url-brute,snmp-brute,svn-brute,telnet-brute,vnc-brute,xmpp-brute
+```
+
+- 快速扫描常见端口，并调用各种脚本
+
+```bash
+#!/usr/bin/env bash   
+
+read -p "ip: " ip  
+nmap -vvv -Pn -p 20,22,23,25,53,69,80-89,443,8440-8450,8080-8089,110,111,137,143,161,389,512,873,1194,1352,1433,1521,1500,1723,2082,2181,2601,3128,3312,3306,3389,3690,4848,5000,5432,5900,5984,6379,7001,7002,7003,7778,8000,8069,8888,9000,9002,9080-9081,9090,9200,10001,10002,11211,27017,50070 --open -sV $ip -n -T4 --max-scan-delay 10 --max-retries 3 --min-hostgroup 10 -oX $ip-result-\`date +%y-%m-%d-%H-%M-%S\`.xml --script=dns-zone-transfer,ftp-anon,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221,http-backup-finder,http-cisco-anyconnect,http-iis-short-name-brute,http-put,http-php-version,http-shellshock,http-robots.txt,http-svn-enum,http-webdav-scan,iax2-version,memcached-info,mongodb-info,msrpc-enum,ms-sql-info,mysql-info,nrpe-enum,pptp-version,redis-info,rpcinfo,samba-vuln-cve-2012-1182,smb-vuln-ms08-067,smb-vuln-ms17-010,snmp-info,sshv1,xmpp-info,tftp-enum,teamspeak2-version,ftp-brute,imap-brute,smtp-brute,pop3-brute,mongodb-brute,redis-brute,ms-sql-brute,rlogin-brute,rsync-brute,mysql-brute,pgsql-brute,oracle-sid-brute,oracle-brute,rtsp-url-brute,snmp-brute,svn-brute,telnet-brute,vnc-brute,xmpp-brute
+```
+
+##### msscan
+
+> https://github.com/robertdavidgraham/masscan
+
+- 速度快，精确度有待优化 ```shell
+
+  masscan -p80,8000-8100 10.0.0.0/8 --rate=10000
+
+  ```
+  ##### masscan\_to\_nmap
+  ```
+
+https://github.com/7dog7/masscan_to_nmap
+
+- nmap+msscan缝合怪
+
+##### Goby
+
+> https://cn.gobies.org/
+
+- 资产扫描利器，支持图像化、方便快捷、可自定义poc漏扫。
+
+##### shuize
+
+> https://github.com/0x727/ShuiZe_0x727
+
+- 信息收集一键化+漏洞检验
+
+##### fscan
+
+> https://github.com/shadow1ng/fscan
+
+##### ALLin
+
+> https://github.com/P1-Team/AlliN
+
+### 04旁站(ip反查域名)
+
+一个服务器上存在多个站点，可通过ip查询相应站点，再从相应站点进一步突破获取服务器权限。
+
+##### 常见查询方法：
+
+**在线平台：**
+
+https://www.webscan.cc/
+https://viewdns.info/reverseip/
+https://reverseip.domaintools.com/
+https://tools.ipip.net/ipdomain.php
+https://dnslytics.com/
+
+**网络空间搜索引擎：**
+
+- fofa、zoomeye、hunte、quake等
+
+**工具：**
+
+- [ip2domain - 批量查询ip对应域名、备案信息、百度权重](https://github.com/Sma11New/ip2domain)
+- 水泽
+- nmap
+- ....
+
+### 05端口
+
+确定真实ip后，就可以进行端口扫描，比较常见的就是nmap和masscan了，masscan相比nmap多了速度的优势，可以快速扫描全端口。扫描可以结合空间引擎结果发现更多目标端口。
+
+> tips:
+>
+> - 大批量扫描时建议云上挂代理池进行。
+> - 查看端口出现频率
+>
+> https://github.com/laconicwolf/Masscan-to-CSV
+>
+> - masscan扫描出的端口可以用nmap去确认
+
+工具可参考C段章节
+
+##### 端口渗透思路表
+
+引用下某大佬的端口渗透思路表，可以学习学习下。
+
+| 端口                              | 服务                  | 渗透用途                                                     |
+| :-------------------------------- | :-------------------- | :----------------------------------------------------------- |
+| tcp 20,21                         | FTP                   | 允许匿名的上传下载,爆破,嗅探,win提权,远程执行(proftpd 1.3.5),各类后门(proftpd,vsftp 2.3.4) |
+| tcp 22                            | SSH                   | 可根据已搜集到的信息尝试爆破,v1版本可中间人,ssh隧道及内网代理转发,文件传输等等 |
+| tcp 23                            | Telnet                | 爆破,嗅探,一般常用于路由,交换登陆,可尝试弱口令               |
+| tcp 25                            | SMTP                  | 邮件伪造,vrfy/expn查询邮件用户信息,可使用smtp-user-enum工具来自动跑 |
+| tcp/udp 53                        | DNS                   | 允许区域传送,dns劫持,缓存投毒,欺骗以及各种基于dns隧道的远控  |
+| tcp/udp 69                        | TFTP                  | 尝试下载目标及其的各类重要配置文件                           |
+| tcp 80-89,443,8440-8450,8080-8089 | 各种常用的Web服务端口 | 可尝试经典的topn,vpn,owa,webmail,目标oa,各类Java控制台,各类服务器Web管理面板,各类Web中间件漏洞利用,各类Web框架漏洞利用等等…… |
+| tcp 110                           | POP3                  | 可尝试爆破,嗅探                                              |
+| tcp 111,2049                      | NFS                   | 权限配置不当                                                 |
+| tcp 137,139,445                   | Samba                 | 可尝试爆破以及smb自身的各种远程执行类漏洞利用,如,ms08-067,ms17-010,嗅探等…… |
+| tcp 143                           | IMAP                  | 可尝试爆破                                                   |
+| udp 161                           | SNMP                  | 爆破默认团队字符串,搜集目标内网信息                          |
+| tcp 389                           | LDAP                  | ldap注入,允许匿名访问,弱口令                                 |
+| tcp 512,513,514                   | Linux rexec           | 可爆破,rlogin登陆                                            |
+| tcp 873                           | Rsync                 | 匿名访问,文件上传                                            |
+| tcp 1194                          | OpenVPN               | 想办法钓VPN账号,进内网                                       |
+| tcp 1352                          | Lotus                 | 弱口令,信息泄漏,爆破                                         |
+| tcp 1433                          | SQL Server            | 注入,提权,sa弱口令,爆破                                      |
+| tcp 1521                          | Oracle                | tns爆破,注入,弹shell…                                        |
+| tcp 1500                          | ISPmanager            | 弱口令                                                       |
+| tcp 1723                          | PPTP                  | 爆破,想办法钓VPN账号,进内网                                  |
+| tcp 2082,2083                     | cPanel                | 弱口令                                                       |
+| tcp 2181                          | ZooKeeper             | 未授权访问                                                   |
+| tcp 2601,2604                     | Zebra                 | 默认密码zerbra                                               |
+| tcp 3128                          | Squid                 | 弱口令                                                       |
+| tcp 3312,3311                     | kangle                | 弱口令                                                       |
+| tcp 3306                          | MySQL                 | 注入,提权,爆破                                               |
+| tcp 3389                          | Windows rdp           | shift后门[需要03以下的系统],爆破,ms12-020                    |
+| tcp 3690                          | SVN                   | svn泄露,未授权访问                                           |
+| tcp 4848                          | GlassFish             | 弱口令                                                       |
+| tcp 5000                          | Sybase/DB2            | 爆破,注入                                                    |
+| tcp 5432                          | PostgreSQL            | 爆破,注入,弱口令                                             |
+| tcp 5900,5901,5902                | VNC                   | 弱口令爆破                                                   |
+| tcp 5984                          | CouchDB               | 未授权导致的任意指令执行                                     |
+| tcp 6379                          | Redis                 | 可尝试未授权访问,弱口令爆破                                  |
+| tcp 7001,7002                     | WebLogic              | Java反序列化,弱口令                                          |
+| tcp 7778                          | Kloxo                 | 主机面板登录                                                 |
+| tcp 8000                          | Ajenti                | 弱口令                                                       |
+| tcp 8009                          | tomcat Ajp            | Tomcat-Ajp协议漏洞                                           |
+| tcp 8443                          | Plesk                 | 弱口令                                                       |
+| tcp 8069                          | Zabbix                | 远程执行,SQL注入                                             |
+| tcp 8080-8089                     | Jenkins,JBoss         | 反序列化,控制台弱口令                                        |
+| tcp 9080-9081,9090                | WebSphere             | Java反序列化/弱口令                                          |
+| tcp 9200,9300                     | ElasticSearch         | 远程执行                                                     |
+| tcp 11211                         | Memcached             | 未授权访问                                                   |
+| tcp 27017,27018                   | MongoDB               | 爆破,未授权访问                                              |
+| tcp 50070,50030                   | Hadoop                | 默认端口未授权访问                                           |
+
+| **端口号** | **端口说明**                     | **渗透思路**                                                 |
+| :--------- | :------------------------------- | :----------------------------------------------------------- |
+| 21/69      | FTP/TFTP：文件传输协议           | 爆破、内网嗅探                                               |
+| 22         | SSH：远程连接                    | 用户名枚举、爆破                                             |
+| 23         | Telnet：远程连接                 | 爆破、内网嗅探                                               |
+| 25         | SMTP：邮件服务                   | 邮件伪造                                                     |
+| 53         | DNS：域名系统                    | DNS域传送\DNS缓存投毒\DNS欺骗\利用DNS隧道技术刺透防火墙      |
+| 389        | LDAP                             | 未授权访问（通过LdapBrowser工具直接连入）                    |
+| 443        | https服务                        | OpenSSL 心脏滴血（nmap -sV --script=ssl-heartbleed 目标）    |
+| 445        | SMB服务                          | ms17_010远程代码执行                                         |
+| 873        | rsync服务                        | 未授权访问                                                   |
+| 1090/1099  | Java-rmi                         | JAVA反序列化远程命令执行漏洞                                 |
+| 1352       | Lotus Domino邮件服务             | 爆破：弱口令、信息泄漏：源代码                               |
+| 1433       | MSSQL                            | 注入、SA弱口令爆破、提权                                     |
+| 1521       | Oracle                           | 注入、TNS爆破                                                |
+| 2049       | NFS                              | 配置不当                                                     |
+| 2181       | ZooKeeper服务                    | 未授权访问                                                   |
+| 3306       | MySQL                            | 注入、爆破、写shell、提权                                    |
+| 3389       | RDP                              | 爆破、Shift后门、CVE-2019-0708远程代码执行                   |
+| 4848       | GlassFish控制台                  | 爆破：控制台弱口令、认证绕过                                 |
+| 5000       | Sybase/DB2数据库                 | 爆破、注入                                                   |
+| 5432       | PostgreSQL                       | 爆破弱口令、高权限执行系统命令                               |
+| 5632       | PcAnywhere服务                   | 爆破弱口令                                                   |
+| 5900       | VNC                              | 爆破：弱口令、认证绕过                                       |
+| 6379       | Redis                            | 未授权访问、爆破弱口令                                       |
+| 7001       | WebLogic中间件                   | 反序列化、控制台弱口令+部署war包、SSRF                       |
+| 8000       | jdwp                             | JDWP 远程命令执行漏洞（[工具](https://github.com/IOActive/jdwp-shellifier)） |
+| 8080/8089  | Tomcat/JBoss/Resin/Jetty/Jenkins | 反序列化、控制台弱口令、未授权                               |
+| 8161       | ActiveMQ                         | admin/admin、任意文件写入、反序列化                          |
+| 8069       | Zabbix                           | 远程命令执行                                                 |
+| 9043       | WebSphere控制台                  | 控制台弱口令[https://:9043/ibm/console/logon.jsp、远程代码执行](https://blog.gm7.org/个人知识库/01.渗透测试/01.信息收集/1.资产收集/03.IP段信息收集/07.端口对应渗透（端口渗透备忘录）.html) |
+| 9200/9300  | Elasticsearch服务                | 远程代码执行                                                 |
+| 11211      | Memcache                         | 未授权访问（nc -vv 目标 11211）                              |
+| 27017      | MongoDB                          | 未授权访问、爆破弱口令                                       |
+| 50000      | SAP                              | 远程代码执行                                                 |
+| 50070      | hadoop                           | 未授权访问                                                   |
+
+------
+
+| **端口号**  | **服务**             | **渗透思路**                                   |
+| :---------- | :------------------- | :--------------------------------------------- |
+| 21          | FTP/TFTP/VSFTPD      | 爆破/嗅探/溢出/后门                            |
+| 22          | ssh远程连接          | 爆破/openssh漏洞                               |
+| 23          | Telnet远程连接       | 爆破/嗅探/弱口令                               |
+| 25          | SMTP邮件服务         | 邮件伪造                                       |
+| 53          | DNS域名解析系统      | 域传送/劫持/缓存投毒/欺骗                      |
+| 67/68       | dhcp服务             | 劫持/欺骗                                      |
+| 110         | pop3                 | 爆破/嗅探                                      |
+| 139         | Samba服务            | 爆破/未授权访问/远程命令执行                   |
+| 143         | Imap协议             | 爆破161SNMP协议爆破/搜集目标内网信息           |
+| 389         | Ldap目录访问协议     | 注入/未授权访问/弱口令                         |
+| 445         | smb                  | ms17-010/端口溢出                              |
+| 512/513/514 | Linux Rexec服务      | 爆破/Rlogin登陆                                |
+| 873         | Rsync服务            | 文件上传/未授权访问                            |
+| 1080        | socket               | 爆破                                           |
+| 1352        | Lotus domino邮件服务 | 爆破/信息泄漏                                  |
+| 1433        | mssql                | 爆破/注入/SA弱口令                             |
+| 1521        | oracle               | 爆破/注入/TNS爆破/反弹shell2049Nfs服务配置不当 |
+| 2181        | zookeeper服务        | 未授权访问                                     |
+| 2375        | docker remote api    | 未授权访问                                     |
+| 3306        | mysql                | 爆破/注入                                      |
+| 3389        | Rdp远程桌面链接      | 爆破/shift后门                                 |
+| 4848        | GlassFish控制台      | 爆破/认证绕过                                  |
+| 5000        | sybase/DB2数据库     | 爆破/注入/提权                                 |
+| 5432        | postgresql           | 爆破/注入/缓冲区溢出                           |
+| 5632        | pcanywhere服务       | 抓密码/代码执行                                |
+| 5900        | vnc                  | 爆破/认证绕过                                  |
+| 6379        | Redis数据库          | 未授权访问/爆破                                |
+| 7001/7002   | weblogic             | java反序列化/控制台弱口令                      |
+| 80/443      | http/https           | web应用漏洞/心脏滴血                           |
+| 8069        | zabbix服务           | 远程命令执行/注入                              |
+| 8161        | activemq             | 弱口令/写文件                                  |
+| 8080/8089   | Jboss/Tomcat/Resin   | 爆破/PUT文件上传/反序列化                      |
+| 8083/8086   | influxDB             | 未授权访问                                     |
+| 9000        | fastcgi              | 远程命令执行                                   |
+| 9090        | Websphere            | 控制台爆破/java反序列化/弱口令                 |
+| 9200/9300   | elasticsearch        | 远程代码执行                                   |
+| 11211       | memcached            | 未授权访问                                     |
+| 27017/27018 | mongodb              | 未授权访问/爆破                                |
+
+| **端口号** | **服务**          | **渗透思路**                                                 |
+| :--------- | :---------------- | :----------------------------------------------------------- |
+| 20         | ftp_data          | 爆破、嗅探、溢出、后门                                       |
+| 21         | ftp_control       | 爆破、嗅探、溢出、后门                                       |
+| 23         | telnet            | 爆破、嗅探                                                   |
+| 25         | smtp              | 邮件伪造                                                     |
+| 53         | DNS               | DNS区域传输、DNS劫持、DNS缓存投毒、DNS欺骗、深度利用：利用DNS隧道技术刺透防火墙 |
+| 67         | dhcp              | 劫持、欺骗                                                   |
+| 68         | dhcp              | 劫持、欺骗                                                   |
+| 110        | pop3              | 爆破                                                         |
+| 139        | samba             | 爆破、未授权访问、远程代码执行                               |
+| 143        | imap              | 爆破                                                         |
+| 161        | snmp              | 爆破                                                         |
+| 389        | ldap              | 注入攻击、未授权访问                                         |
+| 512        | linux r           | 直接使用rlogin                                               |
+| 513        | linux r           | 直接使用rlogin                                               |
+| 514        | linux r           | 直接使用rlogin                                               |
+| 873        | rsync             | 未授权访问                                                   |
+| 888        | BTLINUX           | 宝塔Linux主机管理后台/默认帐户：admin｜默认密码：admin       |
+| 999        | PMA               | 护卫神佩带的phpmyadmin管理后台，默认帐户：root｜默认密码：huweishen.com |
+| 1080       | socket            | 爆破：进行内网渗透                                           |
+| 1352       | lotus             | 爆破：弱口令、信息泄露：源代码                               |
+| 1433       | mssql             | 爆破：使用系统用户登录、注入攻击                             |
+| 1521       | oracle            | 爆破：TNS、注入攻击                                          |
+| 2049       | nfs               | 配置不当                                                     |
+| 2181       | zookeeper         | 未授权访问                                                   |
+| 3306       | mysql             | 爆破、拒绝服务、注入                                         |
+| 3389       | rdp               | 爆破、Shift后门                                              |
+| 4848       | glassfish         | 爆破：控制台弱口令、认证绕过                                 |
+| 5000       | sybase/DB2        | 爆破、注入                                                   |
+| 5432       | postgresql        | 缓冲区溢出、注入攻击、爆破：弱口令                           |
+| 5632       | pcanywhere        | 拒绝服务、代码执行                                           |
+| 5900       | vnc               | 爆破：弱口令、认证绕过                                       |
+| 5901       | vnc               | 爆破：弱口令、认证绕过                                       |
+| 5902       | vnc               | 爆破：弱口令、认证绕过                                       |
+| 6379       | redis             | 未授权访问、爆破：弱口令                                     |
+| 7001       | weblogic          | JAVA反序列化、控制台弱口令、控制台部署webshell               |
+| 7002       | weblogic          | JAVA反序列化、控制台弱口令、控制台部署webshell               |
+| 80         | web               | 常见Web攻击、控制台爆破、对应服务器版本漏洞                  |
+| 443        | web               | 常见Web攻击、控制台爆破、对应服务器版本漏洞                  |
+| 8080       | web｜Tomcat｜..   | 常见Web攻击、控制台爆破、对应服务器版本漏洞、Tomcat漏洞      |
+| 8069       | zabbix            | 远程命令执行                                                 |
+| 9090       | websphere         | 文件泄露、爆破：控制台弱口令、Java反序列                     |
+| 9200       | elasticsearch     | 未授权访问、远程代码执行                                     |
+| 9300       | elasticsearch     | 未授权访问、远程代码执行                                     |
+| 11211      | memcacache        | 未授权访问                                                   |
+| 27017      | mongodb           | 爆破、未授权访问                                             |
+| 27018      | mongodb           | 爆破、未授权访问                                             |
+| 50070      | Hadoop            | 爆破、未授权访问                                             |
+| 50075      | Hadoop            | 爆破、未授权访问                                             |
+| 14000      | Hadoop            | 爆破、未授权访问                                             |
+| 8480       | Hadoop            | 爆破、未授权访问                                             |
+| 8088       | web               | 爆破、未授权访问                                             |
+| 50030      | Hadoop            | 爆破、未授权访问                                             |
+| 50060      | Hadoop            | 爆破、未授权访问                                             |
+| 60010      | Hadoop            | 爆破、未授权访问                                             |
+| 60030      | Hadoop            | 爆破、未授权访问                                             |
+| 10000      | Virtualmin/Webmin | 服务器虚拟主机管理系统                                       |
+| 10003      | Hadoop            | 爆破、未授权访问                                             |
+| 5984       | couchdb           | 未授权访问                                                   |
+| 445        | SMB               | 弱口令爆破，检测是否有ms_08067等溢出                         |
+| 1025       | 111               | NFS                                                          |
+| 2082       |                   | cpanel主机管理系统登陆 （国外用较多）                        |
+| 2083       |                   | cpanel主机管理系统登陆 （国外用较多）                        |
+| 2222       |                   | DA虚拟主机管理系统登陆 （国外用较多）                        |
+| 2601       |                   | zebra路由                                                    |
+| 2604       |                   | zebra路由                                                    |
+| 3128       |                   | 代理默认端口,如果没设置口令很可能就直接漫游内网了            |
+| 3311       |                   | kangle主机管理系统登陆                                       |
+| 3312       |                   | kangle主机管理系统登陆                                       |
+| 4440       |                   | 参考WooYun: 借用新浪某服务成功漫游新浪内网                   |
+| 6082       |                   | 参考WooYun: Varnish HTTP accelerator CLI 未授权访问易导致网站被直接篡改或者作为代理进入内网 |
+| 7778       |                   | 主机控制面板登录                                             |
+| 8083       |                   | 主机管理系统 （国外用较多）                                  |
+| 8649       |                   |                                                              |
+| 8888       |                   | 主机管理系统默认端口                                         |
+| 9000       |                   | fcgi php执行                                                 |
+| 50000      | SAP               | 命令执行                                                     |
+
+**Web端口：**
+
+```php
+80,81,82,443,5000,7001,7010,7100,7547,7777,7801,8000,8001,8002,8003,8005,8009,8010,8011,8060,8069,8070,8080,8081,8082,8083,8085,8086,8087,8088,8089,8090,8091,8161,8443,8880,8888,8970,8989,9000,9001,9002,9043,9090,9200,9300,9443,9898,9900,9998,10002,50000,50070
+```
+
+**服务器：**
+
+```php
+21,22,445,3389,5900
+```
+
+**数据库：**
+
+```php
+1433,1521,3306,6379,11211,27017
+```
+
+### 06IP定位
+
+这里提供几个不错的溯源定位工具：
+
+https://www.opengps.cn/Default.aspx
+https://www.chaipip.com/aiwen.html
+https://cz88.net/
+
+## 0x04 指纹信息
+
+通过关键特征，去识别出目标指纹信息可以快速了解目标架构信息，调整攻击方向。
+
+常见指纹信息：
+
+- CMS
+  - Discuz、织梦、帝国CMS、WordPress、ecshop、蝉知等
+- 前端技术
+  - HTML5、jquery、bootstrap、Vue等
+- 开发语言
+  - PHP、JAVA、Ruby、Python、C#等
+- web服务器
+  - Apache、Nginx、IIS、lighttpd等
+- 应用服务器：
+  - Tomcat、Jboss、Weblogic、Websphere等
+- 操作系统信息
+  - Linux、windows等
+- CDN信息
+  - 帝联、Cloudflare、网宿、七牛云、阿里云等
+- WAF信息
+  - 创宇盾、宝塔、安全狗、D盾、玄武盾等。
+- 其他组件信息
+  - fastjson、shiro、log4j等
+  - OA协议办公
+
+### **01CMS**
+
+已知目标CMS后，可以通过已知漏洞匹配利用，如果是开源CMS，就可以进行审计精准发现问题点。
+
+#### 开发语言识别思路
+
+1. 通过爬虫获取动态链接然后进行正则匹配判断
+
+2. header头中X-Powered-By信息
+
+3. Set-Cookie特征信息
+
+   如包含PHPSSIONID说明是php、包含JSESSIONID说明是java、包含ASP.NET_SessionId说明是aspx。
+
+#### 服务器系统识别思路
+
+1. 通过ping命令根据回显中的ttl值来判断是win还是linux，但值可被修改精准度不高。默认Linux是64，win是128
+2. 页面回显、报错回显、header头等站点泄露的系统信息。
+3. nmap
+
+```bash
+nmap -O IP
+```
+
+#### CMS识别思路
+
+##### **特定文件的MD5**
+
+一般来说，网站的特定图标、js、css等静态文件不会去修改，通过爬虫对这些文件进行抓取并与规则库中md5值做对比，如果一致就是同一CMS。这种情况不排除会出现二开导致的误报，但速度较快。
+
+##### **页面关键字**
+
+正则匹配关键字或报错信息判断。如Powered by Discuz、dedecms等、tomcat报错页面
+
+##### **请求头信息关键字**
+
+通过匹配http响应包中的banner信息来识别。
+
+如：
+
+- X-Powered-By字段
+- Cookies 特征
+- Server信息
+- WWW-Authenticate
+- Meta特征
+- ……
+
+##### **url关键字**
+
+将url中存在路由、robots.txt、爬虫结果与规则库做对比分析来判断是否使用了某CMS
+
+如：
+
+- wordpress默认存在目录：wp-includes、wp-admin
+- 织梦默认管理后台：dede
+- 帝国常用目录：login/loginjs.php
+- weblogic常用目录：wls-wsat
+- jboss常用目录：jmx-console
+- ……
+
+#### 在线平台
+
+- [bugscaner](http://whatweb.bugscaner.com/look/)
+- [数字观星](https://fp.shuziguanxing.com/#/)
+- [云悉](https://www.yunsee.cn/)（自从需要认证后就没有用过.....还认证失败.....）
+- [WhatWeb](https://www.whatweb.net/)
+
+<img src="image/image-20240719162747513.png" alt="image-20240719162747513" style="zoom:80%;" />
+
+#### 工具
+
+- 御剑Web指纹识别
+- WhatWeb
+- Test404轻量CMS指纹识别
+- 椰树
+- WTFScan
+- [Kscan](https://github.com/lcvvvv/kscan)
+- [CMSeeK](https://github.com/Tuhinshubhra/CMSeeK)
+- [CMSmap](https://github.com/Dionach/CMSmap)
+- [ACMSDiscovery](https://github.com/aedoo/ACMSDiscovery)
+- [TideFinger](https://github.com/TideSec/TideFinger)
+- [AngelSword](https://github.com/Lucifer1993/AngelSword)
+- [EHole(棱洞)2.0](https://github.com/EdgeSecurityTeam/EHole)
+
+> ps: cms识别主要还是在于指纹库的维护和更新。
+
+#### 浏览器插件
+
+[wappalyzer](https://www.wappalyzer.com/)
+
+<img src="image/image-20240719162957798.png" alt="image-20240719162957798" style="zoom:80%;" />
+
+插件开源指纹库：https://github.com/AliasIO/wappalyzer/tree/master/src/technologies
+
+### 02WAF
+
+```
+waf是网页程序防火墙一般是软件形式的防火墙非硬件
+设备硬件防火墙 火绒软件防火墙 wafweb防火墙
+```
+
+遇到WAF就得对症下药，总的来说识别分为两种手工和工具：
+
+#### 手工
+
+一般直接输入敏感字段触发拦截规则库就行，如XSS、SQL payload
+
+<img src="image/image-20240719163155029.png" alt="image-20240719163155029" style="zoom:80%;" />
+
+常见的WAF拦截页面可以参考下某大佬总结的WAF一图流：https://cloud.tencent.com/developer/article/1872310
+
+#### 工具
+
+- https://github.com/EnableSecurity/wafw00f
+- https://github.com/Ekultek/WhatWaf
+- nmap的`http-waf-fingerprint.nse`脚本
+
+### 03组件
+
+一般通过异常报错、常用路由、常用header头来获取组件版本、配置等相关信息。
+
+常见组件漏洞简记参考博客《组件漏洞简记》章
+
+### 04信息处理
+
+#### Ehole
+
+> https://github.com/EdgeSecurityTeam/EHole
+>
+> EHole是一款对资产中重点系统指纹识别的工具，在红队作战中，信息收集是必不可少的环节，如何才能从大量的资产中提取有用的系统(如OA、VPN、Weblogic...)。EHole旨在帮助红队人员在信息收集期间能够快速从C段、大量杂乱的资产中精准定位到易被攻击的系统，从而实施进一步攻击。
+
+#### AlliN
+
+> https://github.com/P1-Team/AlliN
+>
+> 一个辅助平常渗透测试项目或者攻防项目快速打点的综合工具，由之前写的工具AG3改名而来。是一款轻便、小巧、快速、全面的扫描工具。多用于渗透前资产收集和渗透后内网横向渗透。工具从项目上迭代了一些懒人功能（比如提供扫描资产文件中，可以写绝大部分的各种形式的链接/CIDR,并在此基础上可以添加任意端口和路径）
+
+#### Bufferfly
+
+> https://github.com/dr0op/bufferfly
+>
+> 攻防资产处理小工具，对攻防前的信息搜集到的大批量资产/域名进行存活检测、获取标题头、语料提取、常见web端口检测、简单中间识别，去重等，便于筛选有价值资产。
+
+#### HKTools
+
+> https://github.com/Security-Magic-Weapon/HKTools
+>
+> 一款辅助安全研发在日常工作中渗透测试、安全研究、安全开发等工作的工具
+
+#### EyeWitness
+
+> https://github.com/FortyNorthSecurity/EyeWitness
+
+Eyewitness可自动查询URL对应网站的截图、RDP服务、Open VNC服务器以及一些服务器title、甚至是可识别的默认凭据等，最终会生成一个详细的html报告。
+
+#### anew(去重)
+
+> https://github.com/tomnomnom/anew
+>
+> 好用的去重对比工具
+
+### 05敏感信息
+
+### 01目录结构及敏感文件
+
+常见的敏感目录及文件，会对渗透突破有着很大作用，收集思路一般是爬虫采集、递归扫描、Google Hacking。
+
+#### 常见敏感目录及文件
+
+- 备份文件：`www.zip`、`www.rar`、`blog.gm7.org.zip`等
+- 代码仓库：`.git`、`.svn`等
+- 敏感、隐藏api接口：`/swagger-ui.html`、`/env`等
+- 站点配置文件：`crossdomain.xml`、`sitemap.xml`、`security.txt`等
+- robots文件
+- 网站后台管理页面
+- 文件上传/下载界面
+- ...
+
+> tips:
+>
+> - 扫描核心主要在于字典价值
+> - 403、404页面可能会存在一些信息，可以多fuzz下。
+> - 工具使用时善于关键字过滤，将会减少一些误报。
+
+#### 工具推荐
+
+##### [dirsearch](https://github.com/maurosoria/dirsearch)
+
+dirsearch 是一款使用 python3 编写的，用于暴力破解目录的工具，速度不错，支持随机代理、内容过滤。
+
+##### [feroxbuster](https://github.com/epi052/feroxbuster)
+
+用Rust编写的快速，简单，递归的内容发现工具
+
+##### [yjdirscan](https://github.com/foryujian/yjdirscan)
+
+御剑目录扫描专业版
+
+#### 字典推荐
+
+##### [fuzzDicts](https://github.com/TheKingOfDuck/fuzzDicts)
+
+庞大的Web Pentesting Fuzz 字典，部分精准度不错，可惜更新是2021的时候了。
+
+##### [Web-Fuzzing-Box](https://github.com/gh0stkey/Web-Fuzzing-Box)
+
+Web Fuzzing Box - Web 模糊测试字典与一些Payloads，主要包含：弱口令暴力破解、目录以及文件枚举、Web漏洞...
+
+字典运用于实战案例：https://gh0st.cn/archives/2019-11-11/1
+
+##### [XXE 暴力枚举字典](https://mp.weixin.qq.com/s/7kUFx6VpCgNVomQ_e6H6HA)
+
+<img src="image/image-20240719163713654.png" alt="image-20240719163713654" style="zoom:80%;" />
+
+#### 02JS信息搜集
+
+js文件一般用于帮助网站执行某些功能，存储着客户端代码，可能会存在大量的敏感信息，通过阅读分析可能会找到宝藏。
+
+##### JS信息查找方法
+
+###### 1. 手工
+
+通过查看页面源代码信息，找到.js后筛选特定信息，但这种方法费时费力，一般网站都会存在大量的js文件，还多数为混淆后的信息。
+
+关键信息查找可以使用浏览器自带的全局搜索：
+
+![image-20240719164250263](image/image-20240719164250263.png)
+
+如：通过path:来查Vue框架路由
+
+<img src="image/image-20240719164309684.png" alt="image-20240719164309684" style="zoom:80%;" />
+
+###### 2. 半自动
+
+通过抓包拦截获取url后使用脚本筛选，比如`Burp Suite`专业版，可以在`Target > sitemap`下，选中目标网站选中`Engagement tools -> Find scripts`，找到网站所有脚本内容。
+
+<img src="image/image-20240719170834350.png" alt="image-20240719170834350" style="zoom:80%;" />
+
+也可以使用`Copy links in selected items`复制出选中脚本项目中所包含的URL链接。
+
+<img src="image/image-20240719170900381.png" alt="image-20240719170900381" style="zoom:80%;" />
+
+粘贴下，然后就可以手工验证url信息价值，有时候可以发现一些未授权、敏感的api接口或者一些GitHub仓库、key值等。
+
+<img src="image/image-20240719171226812.png" alt="image-20240719171226812" style="zoom:80%;" />
+
+这种方法因为结合手工，在一些深层目录架构中，通过`Burp Suite script`可以获取到一些工具跑不到的js信息。
+
+3. 工具：
+
+**[JSFinder](https://github.com/Threezh1/JSFinder)**
+
+> JSFinder是一款用作快速在网站的js文件中提取URL，子域名的工具
+
+[JSINFO-SCAN](https://github.com/p1g3/JSINFO-SCAN)
+
+> 递归爬取域名(netloc/domain)，以及递归从JS中获取信息的工具
+
+[URLFinder](https://github.com/pingc0y/URLFinder)
+
+> URLFinder是一款用于快速提取检测页面中JS与URL的工具。
+>
+> 功能类似于JSFinder，但JSFinder好久没更新了。
+
+[HAE](https://github.com/gh0stkey/HaE)
+
+> **HaE**是基于 `BurpSuite Java插件API` 开发的请求高亮标记与信息提取的辅助型框架式插件，该插件可以通过自定义正则的方式匹配响应报文或请求报文，并对满足正则匹配的报文进行信息高亮与提取。如匹配敏感信息、提取页面中的链接信息等。
+
+[**Repo-supervisor**](https://github.com/auth0/repo-supervisor#)
+
+> Repo-supervisor 是一种工具，可帮助您检测代码中的秘密和密码。
+>
+> [command-line-mode](https://github.com/auth0/repo-supervisor#command-line-mode) 功能：
+>
+> CLI 模式允许使用源代码扫描本地目录以检测文件中的机密和密码。结果可能以明文或 JSON 格式返回。
