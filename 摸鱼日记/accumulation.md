@@ -38,7 +38,7 @@
 https://blog.csdn.net/Hardworking666/article/details/123833192
 ```
 
-## 流量分析
+# 流量分析
 
 ### 报文分析
 
@@ -1339,7 +1339,7 @@ union all select top 1 null,id,name,null from dbo.syscolumns where id='5575058' 
 https://blog.csdn.net/suruoxun/article/details/139530306
 ```
 
-## 渗透测试手法
+# 渗透测试手法
 
 ### 01信息搜集
 
@@ -1693,7 +1693,7 @@ CSRF，全称为Cross-Site Request Forgery，跨站请求伪造，是一种网�
 https://forum.butian.net/share/1976
 ```
 
-## 外网信息搜集
+# 外网信息搜集
 
 ### 工具
 
@@ -1763,7 +1763,7 @@ App敏感信息
 蜜罐识别
 ```
 
-#### 主域名信息
+## 0x01主域名信息
 
 ```
 域名用来代替IP使其更容易被用户找到、记住。
@@ -2151,7 +2151,7 @@ https://github.com/wgpsec/ENScan_GO
 
 # 7.19
 
-#### 子域名信息
+## 0x02子域名信息
 
 子域名一般是父级域名的下一级。一般企业主站域名的防护都是重点，安全级别较高，突破难度较大，而企业可能会有数十个甚至更多的子域名应用，因为数量众多，安全因素和成本投入多，相应的防护也没有那么及时有效。子域名往往是攻击突破口，通过子域名发现更多的可能性或是进行迂回攻击。
 
@@ -2671,7 +2671,7 @@ Layer子域名挖掘机是一款子域名收集工具，拥有简洁的界面和
 
 Eyewitness可自动查询URL对应网站的截图、RDP服务、Open VNC服务器以及一些服务器title、甚至是可识别的默认凭据等，最终会生成一个详细的html报告。
 
-## IP信息搜集
+## 0x03IP信息搜集
 
 通过ip或域名获取到一些基本信息（端口、服务、架构、目录等）后，也可以通过ip段目标扩大攻击面，也有可能找到一些未分配的边缘资产。
 
@@ -3716,3 +3716,988 @@ js文件一般用于帮助网站执行某些功能，存储着客户端代码，
 > [command-line-mode](https://github.com/auth0/repo-supervisor#command-line-mode) 功能：
 >
 > CLI 模式允许使用源代码扫描本地目录以检测文件中的机密和密码。结果可能以明文或 JSON 格式返回。
+
+# 7.22
+
+###### 3.工具
+
+**[JSFinder](https://github.com/Threezh1/JSFinder)**
+
+> JSFinder是一款用作快速在网站的js文件中提取URL，子域名的工具
+
+[JSINFO-SCAN](https://github.com/p1g3/JSINFO-SCAN)
+
+> 递归爬取域名(netloc/domain)，以及递归从JS中获取信息的工具
+
+[URLFinder](https://github.com/pingc0y/URLFinder)
+
+> URLFinder是一款用于快速提取检测页面中JS与URL的工具。
+>
+> 功能类似于JSFinder，但JSFinder好久没更新了。
+
+[HAE](https://github.com/gh0stkey/HaE)
+
+> **HaE**是基于 `BurpSuite Java插件API` 开发的请求高亮标记与信息提取的辅助型框架式插件，该插件可以通过自定义正则的方式匹配响应报文或请求报文，并对满足正则匹配的报文进行信息高亮与提取。如匹配敏感信息、提取页面中的链接信息等。
+
+[**Repo-supervisor**](https://github.com/auth0/repo-supervisor#)
+
+> Repo-supervisor 是一种工具，可帮助您检测代码中的秘密和密码。
+>
+> [command-line-mode](https://github.com/auth0/repo-supervisor#command-line-mode) 功能：
+>
+> CLI 模式允许使用源代码扫描本地目录以检测文件中的机密和密码。结果可能以明文或 JSON 格式返回。
+
+###### 4. 其他辅助工具
+
+信息收集过程中，js文件不用仅限于当前网站版本，网站的历史版本中也可能会存在一些未失效的关键信息。
+
+**历史界面**
+
+[wayback](https://archive.org/web/)会记录网站版本更迭，可以获取到之前版本的网站，不仅可以用于收集历史js文件，也有可能找到一些后来删除的敏感资产信息，或者一些漏洞
+
+![image-20240722092016569](image/image-20240722092016569.png)
+
+**历史信息查找工具：**
+
+[**waybackurls**](https://github.com/tomnomnom/waybackurls)
+
+> 获取 Wayback Machine 知道的域的所有 URL
+
+收集历史js文件
+
+webbackurls target.com | grep "\.js" | uniq |sort
+
+通过`Wayback Machine`收集到的url js列表需要进行存活检验，避免误报，可以使用curl命令或者[hakcheckurl](https://github.com/hakluke/hakcheckurl)工具进行检验。最后在做url提取即可。
+
+**反混肴**
+
+对于存在混淆的代码需要进行反混淆美化下，使其更易看懂
+
+[**js-beautify**](https://github.com/beautify-web/js-beautify)
+
+> 这个小美化器将重新格式化和重新缩进书签、丑陋的 JavaScript、由 Dean Edward 的流行打包程序打包的解包脚本，以及由 npm 包 [javascript-obfuscator](https://github.com/javascript-obfuscator/javascript-obfuscator)处理的部分去混淆脚本。
+
+**[de4js](https://lelinhtinh.github.io/de4js/)**
+
+> 在线JavaScript 反混淆器和解包器
+
+**url采集**
+
+[**Rad**](https://stack.chaitin.com/tool/detail?id=2)
+
+一款专为安全扫描而生的浏览器爬虫。
+
+[whatweb-plus](https://github.com/winezer0/whatweb-plus)
+
+获取网站title头及Web指纹
+
+[url-extractor](http://www.bulkdachecker.com/url-extractor/)
+
+在线url提取
+
+js**中关键信息简记**
+
+- 密码、api密钥、secretKey等硬编码
+- 隐藏的api接口，如后台、业务测试、某服务等，可能会存在未授权。
+- 注释信息，注释为代码时，可能会通过修改注释改变业务逻辑，实现机制绕过，如xss绕过、登录绕过等。
+- Webpack 打包静态资源、js.map后缀文件，是jQuery中的一个新功能，支持Source Map,储存着各种api接口信息，而Webpack打包的信息很多都会放在js.map文件中，通过还原代码可能会找到一些未授权的api接口。相关处理工具如下：
+  - [sourcemapper](https://github.com/denandz/sourcemapper)
+  - https://www.npmjs.com/package/restore-source-tree
+  - https://github.com/paazmaya/shuji
+- 子域名信息
+- 依赖或框架，对于旧依赖或框架可以直接使用[retire.js](https://retirejs.github.io/retire.js/)扫描相关漏洞。
+- ……
+
+#### 03Google Hacking
+
+Google作为一款全球通用的发达搜索引擎，爬取的和收录的数据量也是庞大无比，善用搜索引擎语法可以帮忙我们发现更多敏感信息。
+
+#### 说明
+
+| 指令              | 用法                                                         | 示例                                                         |
+| :---------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| “”（引号）        | 用引号来查询一个确切的单词或短语                             | 查找有关《百年孤独》这本书的网页，语法：“百年孤独”           |
+| OR（或者）        | 用OR分隔搜索词，同时执行两个搜索查询，这将找到包含多个单词之一的页面。 | 搜索引用了“Google Drive”、“Dropbox”或“OneDrive”的页面，语法：Google Drive OR Dropbox OR OneDrive |
+| -（减号、连字符） | 在单词或网站前使用连字符将其从搜索结果中排除                 | 从搜索结果中排除www主机名，语法：-www site:wikipedia.org     |
+| allintext:        | 使用allintext:[搜索短语]查找正文中包含这些单词的页面         | 查找正文中有关Roth、IRA投资讯息的页面，语法：allintext:Roth IRA 投资 |
+| allintitle:       | 使用allintitle:[搜索短语]查找标题中包含这些单词的页面        | 查找标题中同时包含“Apple”和“notebook”的页面，语法：allintitle:Apple notebook |
+| allinurl:         | 使用allinurl:[搜索短语]查找URL中包含这些单词的页面           | 查找URL中同时包含”Microsoft” and “Surface”的页面，语法：allinurl:Microsoft Surface |
+| site:             | 使用site:[URL]将搜索结果限制到特定网站                       | 查找云点SEO网关于谷歌SEO的页面，语法：site:yundianseo.com 谷歌SEO |
+| ~（波浪号）       | 使用波浪号获得目标关键词及其近似词的搜索结果                 | 查找SEO方面的策略或者教程，语法：SEO ~教程                   |
+| related:          | 使用related:[URL]查找与特定网站类似的网站                    | 查找与云点SEO类似的网站，语法：related:yundianseo.com        |
+| define:           | 使用define:[搜索短语]查找其定义                              | 查找SEO的定义，语法：define:SEO                              |
+| $                 | 使用$查找特定价格的商品                                      | 查找一款售价在99美金的手机，语法：mobile phone $99           |
+| location:         | 使用location:[地点]查看某个地区内的相关信息                  | 查询南京的酒店，语法：hotel location:Nanjing                 |
+| *（星号）         | 添加星号作为未知单词或事实的占位符                           | 查找以“生活就像一个”开头的引语，语法：生活就像一个*          |
+| filetype:         | 使用filetype:[后缀]将结果限制为特定的文件格式，如PDF或DOC。  | 查找PDF格式的Microsoft Office键盘快捷键相关文件，语法：filetype:pdf Microsoft Office键盘快捷键 |
+| ..（两点）        | 用两个句点分隔数字，不带空格，以搜索该范围内的数字           | 查找1950年至2000年间发生的计算机里程碑，语法：”计算机里程碑” 1950..2000 |
+| AROUND(n)         | 在两个搜索词之间加上AROUND(n)，以查找两个词间有特定距离的页面。用数字n设置术语之间的最大距离，这对于查找两个搜索词之间的关系很有用。 | 查找在同一句话或段落中提到Facebook和Microsoft的页面，语法：Facebook AROUND(7) Microsoft |
+
+##### hacking常用语法
+
+- [Google Hacking Database](https://www.exploit-db.com/google-hacking-database)
+- [cxsecurity-hacking-dorks](https://cxsecurity.com/dorks/)
+- [Github Google Hacking](https://github.com/BullsEye0/google_dork_list/blob/master/google_Dorks.txt)
+
+###### 管理后台地址
+
+```php
+site:target.com intext:管理 | 后台 | 后台管理 | 登陆 | 登录 | 用户名 | 密码 | 系统 | 账号 | login | system  
+site:target.com inurl:login | inurl:admin | inurl:manage | inurl:manager | inurl:admin_login | inurl:system | inurl:backend  
+site:target.com intitle:管理 | 后台 | 后台管理 | 登陆 | 登录
+```
+
+###### 上传类漏洞地址
+
+```php
+site:target.com inurl:file  
+site:target.com inurl:upload
+```
+
+###### 注入页面
+
+```php
+site:target.com inurl:?id=  
+site:target.com inurl:php?id=
+```
+
+###### 编辑器页面
+
+```php
+site:target.com inurl:ewebeditor
+```
+
+###### 目录遍历漏洞
+
+```php
+site:target.com intitle: "index of"
+```
+
+###### SQL错误
+
+``
+site:target.com intext:"sql syntax near" | intext:"syntax error has occurred" | intext:"incorrect syntax near" | intext:"unexpected end of SQL command" | intext:"Warning: mysql_connect()" | intext:”Warning: mysql_query()" | intext:"Warning: pg_connect()"
+
+```php
+##### phpinfo
+```
+
+site:target.com ext:php intitle:phpinfo "published by the PHP Group"
+
+```php
+##### 配置文件泄露
+```
+
+site:target.com ext:.xml | .conf | .cnf | .reg | .inf | .rdp | .cfg | .txt | .ora | .ini
+
+```php
+##### 数据库文件泄露
+```
+
+site:target.com ext:.sql | .dbf | .mdb | .db
+
+```php
+##### 日志文件泄露
+```
+
+site:target.com ext:.log
+
+~~~php
+##### 备份和历史文件泄露
+```bash
+site:target.com ext:.bkf | .bkp | .old | .backup | .bak | .swp | .rar | .txt | .zip | .7z | .sql | .tar.gz | .tgz | .tar
+~~~
+
+###### 公开文件泄露
+
+```bash
+site:target.com filetype:.doc | .docx | .xls | .xlsx | .ppt | .pptx | .odt | .pdf | .rtf | .sxw | .psw | .csv
+```
+
+###### 邮箱信息
+
+```bash
+site:target.com intext:@target.com  
+site:target.com 邮件  
+site:target.com email
+```
+
+###### 社工信息
+
+```bash
+site:target.com intitle:账号 | 密码 | 工号 | 学号 | 身份证
+```
+
+#### **tips：**
+
+- 判断目标是否被黑过。（如html寄生虫）
+
+site:xx.com指定搜索发现多个垃圾数据，大概率中招过。（黑帽SEO劫持）
+
+- 可搜索渗透特征痕迹（如遗留webshell、执行命令接口、黑页）
+- 搜索常见的敏感文件、路由
+- 发现其他人正在搜索的内容
+  - [Google Trends](https://www.yundianseo.com/google-trends/)
+- 搜索结果别忘了快照信息。
+- Google搜索会追踪ip和地址，想要隐私可以试试私密搜索*（代理访问其他搜索引擎内容）*：
+  - [startpage.com](https://www.startpage.com/)
+  - [秘迹搜索](https://mijisou.com/)
+
+> ps: 百度、搜狗、bing也是可以使用语法精确搜索，但限于seo逻辑、广告、资源等多个因素，经常不如Google，但有时候结合又有不错的收获。
+
+##### 百度语法
+
+- **`site`:** 搜索特定网站的内容
+
+<img src="image/image-20240722093632630.png" alt="image-20240722093632630" style="zoom:80%;" />
+
+<img src="image/image-20240722093735253.png" alt="image-20240722093735253" style="zoom:80%;" />
+
+**`inurl`:** 搜索网址中的内容
+
+<img src="image/image-20240722093849668.png" alt="image-20240722093849668" style="zoom:80%;" />
+
+- **`“ ”`：** 搜索关键不可拆分
+
+<img src="image/image-20240722094044127.png" alt="image-20240722094044127" style="zoom:80%;" />
+
+##### 图片反查
+
+百度识图、googleimage、tineye等识图引擎
+
+<img src="image/image-20240722094240419.png" alt="image-20240722094240419" style="zoom:80%;" />
+
+##### 从图片原图获取坐标
+
+###### 在线查看器
+
+改图宝
+https://www.gaitubao.com/exif
+图虫EXIF查看器
+https://exif.tuchong.com/
+我爱斗图
+https://www.52doutu.cn/tools/exif
+python-exifread 库
+https://link.zhihu.com/?target\=https%3A//pypi.python.org/pypi/ExifRead
+
+###### 经纬度转地址
+
+GPS查询网址1
+http://www.gpsspg.com/maps.htm
+GPS查询网址2
+http://www.gzhatu.com/dingwei.html
+地球在线
+https://www.earthol.com/
+python-geopy库
+https://www.osgeo.cn/geopy/
+
+#### 04Github信息收集
+
+自从学会使用github并在上面乱捣鼓找到一些站点账号或源码后，就此走上不归路，各种Github监控搞上，又发现一些阿里key，简直是宝了……
+
+##### Github搜索语法
+
+**高级搜索：**https://github.com/search/advanced
+
+**Github高级搜索语法：https://docs.github.com/cn/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax?spm=a2c6h.12873639.article-detail.6.55db74b8e8hJQq**
+
+Github有着自己的搜索语法，善用搜索语法能发现更多的有用信息。一般来说，Github搜索都是以域名、备案、js路径、网站技术支持等关键内容为主。
+
+搜索包含"`AccessKey ID`"和`password`内容的代码。
+
+<img src="image/image-20240722094653046.png" alt="image-20240722094653046" style="zoom:80%;" />
+
+一些工具中总结了一些常见的搜索语法：
+
+https://github.com/obheda12/GitDorker/tree/master/Dorks
+
+![image-20240722094729057](image/image-20240722094729057.png)
+
+搜索常用语法，可以搜索到一些敏感的私钥，一些SSH登录私钥，mysql的数据库密码，API key等等
+
+```bash
+"token"  
+"password"  
+"secret"  
+"passwd"  
+"username"  
+"key"  
+"apidocs"  
+"appspot"  
+"auth"  
+"aws\_access"  
+"config"  
+"credentials"  
+"dbuser"  
+"ftp"  
+"login"  
+"mailchimp"  
+"mailgun"  
+"mysql"  
+"pass"  
+"pem private"  
+"prod"  
+"pwd"  
+"secure"  
+"ssh"  
+"staging"  
+"stg"  
+"stripe"  
+"swagger"  
+"testuser"  
+"jdbc"  
+extension:pem private  
+extension:ppk private  
+extension:sql mysql dump password  
+extension:json api.forecast.io  
+extension:json mongolab.com  
+extension:yaml mongolab.com  
+extension:ica \[WFClient\] Password\=  
+extension:avastlic “support.avast.com”  
+extension:js jsforce conn.login  
+extension:json googleusercontent client\_secret  
+“target.com” send\_keys  
+“target.com” password  
+“target.com” api\_key  
+“target.com” apikey  
+“target.com” jira\_password  
+“target.com” root\_password  
+“target.com” access\_token  
+“target.com” config  
+“target.com” client\_secret  
+“target.com” user auth
+```
+
+##### 收集工具
+
+###### GitDorker
+
+> https://github.com/obheda12/GitDorker
+
+GitDorker 是一款github自动信息收集工具，它利用 GitHub 搜索 API 和作者从各种来源编译的大量 GitHub dorks 列表，以提供给定搜索查询的 github 上存储的敏感信息的概述。
+
+###### trufflehog
+
+> https://github.com/trufflesecurity/trufflehog
+
+Truffle Hog是一款采用Python开发的工具，它可以检索GitHub代码库的所有代码提交记录以及分支，并搜索出可以表示密钥(例如AWS密钥)的高熵字符串。一般用来探测泄漏密钥的工具，支持扫描的数据源包括git、github、gitlab、S3、文件系统、文件和标准输入。
+
+###### 其他检索方法：
+
+https://github.com/BishopFox/GitGot
+
+https://github.com/UKHomeOffice/repo-security-scanner
+
+https://github.com/gwen001/github-search
+
+https://github.com/eth0izzle/shhgit
+
+https://github.com/lightless233/geye
+
+https://github.com/cve-search/git-vuln-finder
+
+https://github.com/Securityautomation/DumpTheGit
+
+https://github.com/4x99/code6
+
+https://github.com/tillson/git-hound
+
+##### 代码仓库在线搜索平台
+
+###### pinatahub
+
+> [https://pinatahub.incognita.tech](https://pinatahub.incognita.tech/)
+>
+> github敏感信息搜索引擎，有时候github搜索查看不方便，可以直接在这个网站搜索。
+
+<img src="image/image-20240722095230358.png" alt="image-20240722095230358" style="zoom:80%;" />
+
+###### searchcode
+
+> https://searchcode.com/
+>
+> SearchCode从Github、BitBucket、CodePlex、SourceForge、Fedora等代码仓库里筛选了近160亿行开源代码，你能够使用文件扩展、特定代码库名字、URL、正则表达式、特殊字符等过滤器对源代码进行过滤，以便搜到你想要的代码。
+
+<img src="image/image-20240722095300681.png" alt="image-20240722095300681" style="zoom:80%;" />
+
+##### 其他仓库
+
+GitLab: https://about.gitlab.com/
+
+gitee: https://gitee.com/
+
+csdn：https://gitcode.net/explore
+
+#### 05邮箱信息搜集
+
+有时候不仅是正面硬刚就可以的，还需要迂回战术配合出击，正如攻防中社工一样，总会有一些意想不到的成果。随着办公网络的发展，邮箱也成为了常用的办公方式之一。攻防也是从信息收集逐渐延伸到钓鱼上，只要钓鱼技术好，轻轻松松混入内部，而要想社工钓鱼玩得溜，邮件方面是一个重要的突破口。
+
+> tips: 邮箱建议做筛选，把一些疑是网络管理员、运维人员、安全部门的人员提取出来，单独发送或者不发，由于这部分人员安全意识偏高，容易打草惊蛇，一般多针对非技术人员，容易下手。
+
+##### 邮箱入口查找方法
+
+> 邮件服务器主要从端口和title标识两个信息点去确认的。
+
+邮件服务器常见端口：
+
+- 25
+- 109
+- 110
+- 143
+- 465
+- 995
+- 993
+
+邮件服务器常见title：
+
+- 邮箱登录
+- Coremail
+- eYou邮件系统
+- TurboMail
+- Exchange
+- ……
+
+###### C段扫描寻找入口
+
+- 获取到目标后，从目标mx记录域名找到他的真实ip，若是第三方邮件服务器，MX记录就没啥参考价值了。
+
+<img src="image/image-20240722095450521.png" alt="image-20240722095450521" style="zoom:80%;" />
+
+- 对获取到的真实ip这个段进行C段扫描，有时候也可以进行B段扫描。然后通过端口、title去确定邮件服务器信息。C段扫描方法可以参考上文C段收集章节。
+
+###### 通过子域名扫描寻找入口
+
+主要通过一些子域名收集工具去确认，如：Subdomainbrute、ksubdomain、Oneforall、Sublist3r、TeeMO、LangSrcCurise、Layer挖掘机等。
+
+###### 通过搜索引擎寻找入口
+
+战场主力也还是Google hacking和网络空间搜索引擎
+
+1. **Google Hacking**
+
+```bash
+site:target.com intitle:"Outlook Web App"  
+site:target.com intitle:"mail"  
+site:target.com intitle:"邮箱"
+```
+
+<img src="image/image-20240722095558943.png" alt="image-20240722095558943" style="zoom:80%;" />
+
+1. **网络空间搜索引擎**
+
+- Shodan
+- fofa
+- zoomeye
+- 0.zone
+
+```
+(group\==阿里&&title\==邮箱)
+```
+
+<img src="image/image-20240722095644907.png" alt="image-20240722095644907" style="zoom:80%;" />
+
+##### 邮箱收集方法
+
+###### 搜索引擎
+
+**Google Hacking**
+
+<img src="image/image-20240722095806100.png" alt="image-20240722095806100" style="zoom:80%;" />
+
+> - 有时候github一些仓库代码中也会存在邮箱信息。
+> - 一般都会有邮箱、手机号等官方联系方式信息。
+
+**网络空间搜索引擎**
+
+**0.zone邮箱收集**
+
+```
+email\_type\==邮箱&&(group\==阿里)
+```
+
+<img src="image/image-20240722095840127.png" alt="image-20240722095840127" style="zoom:80%;" />
+
+##### 在线收集平台
+
+> ps: 基本都需要注册，注册获取的信息比游客多好多，有些还需要绑定手机号。
+
+###### [Snov.io](https://app.snov.io/)
+
+Snovio是一个集成了“LinkedIn、GitHub、Moz、StackOverflow、Indeed、Behance、Upwork、Google页面邮箱采集”+“邮箱验证”+“联系人管理”+“邮件发送”为一身的网站。在Snovio只要输入一个域名，就可以采集到该域名在以上平台中暴露的所有邮箱地址，还支持API批量读取。
+
+强大的邮箱收集，可单个收集也可以批量收集，还支持api调用。
+
+<img src="image/image-20240722101143786.png" alt="image-20240722101143786" style="zoom:80%;" />
+
+> - 免费版每月可以有100条收集数量，也就是50信用。
+> - 该站点的Google插件更方便
+>   - https://snov.io/knowledgebase/how-to-use-snovio-extension-for-chrome/
+
+###### [hunter](https://hunter.io/)
+
+Hunter可让您在几秒钟内找到专业的电子邮件地址，并与对您的业务重要的人建立联系。
+
+> 打码信息需要注册绑定手机号后才能看到。
+
+<img src="image/image-20240722101159572.png" alt="image-20240722101159572" style="zoom:80%;" />
+
+###### [phonebook](https://phonebook.cz/)
+
+Phonebook例举所有的域名，邮件地址，或者是所予域名的url，支持*.gov.uk的通配符，有340亿条记录。可以批量下载想要的域名。
+
+<img src="image/image-20240722101209405.png" alt="image-20240722101209405" style="zoom:80%;" />
+
+###### [intelx](https://intelx.io/)
+
+intelx是一个搜索引擎和数据存档。通过电子邮件，域名，IP, CIDR，比特币地址等等查找数据泄露信息。随便搜一下好像搜索出了一个泄露的邮箱数据库：
+
+<img src="image/image-20240722101218269.png" alt="image-20240722101218269" style="zoom:80%;" />
+
+###### [skymem](http://www.skymem.info/)
+
+一款可查找公司和人员的电子邮件地址在线邮箱查找平台，数据量较少，准确度高，大批量的需要购买。
+
+<img src="image/image-20240722101228206.png" alt="image-20240722101228206" style="zoom:80%;" />
+
+###### 爱企查、企查查等批量查询
+
+如通过爱企查的爱番番寻宝客“获取更多的联系方式”
+
+<img src="image/image-20240722101234031.png" alt="image-20240722101234031" style="zoom:80%;" />
+
+<img src="image/image-20240722101236591.png" alt="image-20240722101236591" style="zoom:80%;" />
+
+如使用八爪鱼采集器进行批量查询
+
+https://www.bazhuayu.com/tutorial/qccqyemailcj
+
+###### 邮箱泄露信息查询
+
+- https://monitor.firefox.com/
+- https://haveibeenpwned.com/
+- https://ghostproject.fr/
+
+###### 其他
+
+- [https://app.apollo.io](https://app.apollo.io/)
+- [https://contactout.com](https://contactout.com/)
+- [https://www.datanyze.com](https://www.datanyze.com/)
+- [https://www.email-format.com](https://www.email-format.com/)
+- TG社工库、其他社工库
+
+##### 工具收集
+
+###### [theHarvester](https://github.com/laramies/theHarvester)
+
+> theHarvester是Kali自带的一款社会工程学工具，默认集成了多个api，利用网络爬虫技术通过Google、Bing、PGP、LinkedIn、Baidu、Yandex、People123、Jigsaw、Shodan、PGP服务器等不同公开源整理收集，能够收集e-mail、用户名、主机名、子域名、雇员、开放端口和Banner等信息。
+
+theHarvester 参数详解
+
+```php
+  -h, \--help            show this help message and exit    #显示帮助信息并退出  
+  -d, \--domain          DOMAIN Company name or domain to search.    #要搜索的公司名称或域名  
+  -l, \--limit           LIMIT Limit the number of search results, default\=500.  #采集特定数量的结果，不指定情况下，默认为500  
+  -S, \--start           START Start with result number X, default\=0.    #从采集到的信息编号“X”处开始执行采集，默认从0开始  
+  -g, \--google-dork     Use Google Dorks for Google search.     #使用google Dorks进行google搜索。 （一般情况下不用，你懂的）  
+  -p, \--proxies         Use proxies for requests, enter proxies in proxies.yaml.    #对信息采集的请求使用代理  
+  -s, \--shodan          Use Shodan to query discovered hosts.       #使用shodan查询发现的主机  
+  --screenshot Take screenshots of resolved domains specify output directory:       #对解析域的页面进行截图，需指定截图文件存放目录  
+        \--screenshot output\_directory      \# 截图保存目录  
+  -v, \--virtual-host    Verify host name via DNS resolution and search for virtual hosts.       #通过DNS解析主机名并搜索虚拟主机  
+  -e, \--dns-server DNS\_SERVER DNS server to use for lookup.     #指定DNS解析服务器  
+  -t, \--dns-tld DNS\_TLD  Perform a DNS TLD expansion discovery, default False.      #执行DNS TLD扩展发现，默认为False状态  
+  -r, \--take-over       Check for takeovers.    #检查接管  
+  -n, \--dns-lookup      Enable DNS server lookup, default False.       \# 启用DNS服务器查找，默认为False状态                                                                                                       
+  -c, \--dns-brute       Perform a DNS brute force on the domain.       \# 进行DNS域解析暴力破解                                                                                                           
+  -f, \--filename        Save the results to an HTML and/or XML file.    #指定输出文件名，格式支持HTML和XML                                                                                                         
+  -b SOURCE, \--source SOURCE                                                                                                                                                     
+                        baidu, bing, bingapi, bufferoverun, certspotter, crtsh, dnsdumpster, duckduckgo, exalead, github-code, google, hackertarget, hunter, intelx,             
+                        linkedin, linkedin\_links, netcraft, otx, pentesttools, projectdiscovery, qwant, rapiddns, securityTrails, spyse, sublist3r, threatcrowd, threatminer,    
+                        trello, twitter, urlscan, virustotal, yahoo     #指定采集信息的源  
+```
+
+**常用参数**
+
+-d：指定搜索的域名或网址
+-b：指定采集信息的源（如baidu，biying，google）
+-l：指定采集信息的返回数量，默认500
+-f：输出文件名并保存采集结果，可以保存为HTML或XML格式；如果不指定，采集信息仅作屏幕显示
+
+<img src="image/image-20240722101405184.png" alt="image-20240722101405184" style="zoom:80%;" />
+
+> api key没有配置的时候，结果较少。
+
+##### 验证邮箱
+
+收集到邮箱后，就要对其进行存活性验证，避免出现被弃用、不可用的邮箱。
+
+###### 在线平台
+
+- [Email地址检查、检测Email地址真实性、检测电子邮件地址真实性--查错网](http://tool.chacuo.net/mailverify)
+- [Verify Email Address Online - Free Email Verifier - Free Email Address Verification](https://verify-email.org/)
+- [免费在线批量验证邮箱有效性 - EmailCamel.com](http://www.emailcamel.com/)
+- [Email Verifier - Verify Email Address For Free With Our Verifier Tool](https://www.verifyemailaddress.org/)
+- [snov.io 电子邮箱验证](https://app.snov.io/verify/individual-emails)
+
+<img src="image/image-20240722101448635.png" alt="image-20240722101448635" style="zoom:80%;" />
+
+###### 工具
+
+**verifyemail**
+
+> https://github.com/Tzeross/verifyemail
+>
+> Python在线验证邮箱真实性，支持批量验证，支持全部域名邮箱，支持全部域名邮箱，支持全部域名邮箱，支持全部域名邮箱
+
+##### 邮箱爆破
+
+> 弱口令爆破方式只适用于目标企业自己的邮件服务器如owa等，对第三方邮箱不优先考虑
+
+###### 常用字典组合
+
+> 员工名称拼音/首字母
+>
+> 员工名称拼音/首字母+日期
+>
+> 公司简称+年份
+>
+> 员工名称+公司名
+>
+> passwd+日期
+>
+> P@sswd!+日期
+
+###### **爆破字典**
+
+https://github.com/rootphantomer/Blasting_dictionary
+
+https://github.com/TheKingOfDuck/fuzzDicts
+
+###### 工具
+
+爆破邮箱大概分为两种情况
+
+- 网页邮箱爆破
+  - burpsuite等
+- STMP协议等邮箱端口爆破
+  - medusa、hydra、SNETCracker、[GoMapEnum](https://github.com/nodauf/GoMapEnum)、APT34组织 owa爆破工具等（多数工具kali都自带）
+
+> 邮箱相关端口：
+>
+> SMTP默认端口：25
+>
+> POP3默认端口：110
+>
+> IMAP默认端口：143
+
+##### 临时邮箱
+
+```bash
+#所谓的十分钟邮箱类  
+http://www.yopmail.com/zh/  
+https://10minutemail.com/  
+https://10minutemail.net/  
+https://www.guerrillamail.com/zh/inbox  
+http://www.fakemailgenerator.com/  
+https://temp-mail.org/en/  
+https://www.guerrillamail.com/  
+http://tool.chacuo.net/mailsend  
+https://maildrop.cc/  
+http://tool.chacuo.net/mailanonymous  
+https://tempmail.altmails.com/  
+https://www.snapmail.cc/  
+https://www.linshi-email.com/
+```
+
+##### 匿名邮箱
+
+- [ProtonMail](https://mail.protonmail.com/inbox)
+- [Get secure, reliable email hosting – FastMail](https://www.fastmail.com/)
+- [xyfir/ptorx](https://github.com/xyfir/ptorx)
+- [Tutanota](https://tutanota.com/)
+
+#### 06 网盘信息收集
+
+一些安全意识薄弱的人员对于上传到网盘上的资源未作加密限制或者密码泄露，然后又被一些云盘爬虫给收集到，最终导致信息泄露。通过一些网盘引擎可以获取到其中的泄露信息。
+
+##### 在线平台
+
+https://lzpan.com/
+凌风云：https://www.lingfengyun.com/
+蓝菊花：http://www.lanjuhua.com/
+大力盘：https://www.dalipan.com/
+猪猪盘：http://www.zhuzhupan.com/
+PanSou：http://www.pansou.com/
+盘飞飞：https://panfeifei.com/
+
+由于网盘搜索工具的时效性，可以通过搜索引擎去获取一些。
+
+<img src="image/image-20240722101759662.png" alt="image-20240722101759662" style="zoom:80%;" />
+
+###### 搜索关键词
+
+关键词一般以单位名称、别称、产品业务等
+
+<img src="image/image-20240722101830259.png" alt="image-20240722101830259" style="zoom:80%;" />
+
+##### 爬虫
+
+- [百度网盘爬虫脚本搜索](https://github.com/search?q=百度网盘爬虫)
+- [网盘搜索工具](https://www.yzzpan.com/#sharefile=trOPDGQC_54416)
+
+<img src="image/image-20240722101906135.png" alt="image-20240722101906135" style="zoom:80%;" />
+
+- 网盘有时候会存在一些简历信息泄露，如手机号、邮箱、部门等。
+
+## 0x06 其他信息
+
+### 01APP
+
+通过获取App配置、数据包，去获取url、api、osskey、js等敏感信息。
+
+#### App查找入口
+
+##### 搜索引擎
+
+- Google Hacking
+- 网络空间搜索引擎
+
+##### 在线聚合平台
+
+- [小蓝本](https://www.xiaolanben.com/pc)
+- [七麦](https://www.qimai.cn/)
+- [AppStore](https://www.apple.com/app-store)
+- [点点](https://www.diandian.com/)
+- [豌豆荚](https://www.wandoujia.com/)
+- [天眼查](https://www.tianyancha.com/)/[爱企查](https://aiqicha.baidu.com/)等
+- App应用商城
+
+#### App敏感信息收集
+
+> ps：App关联打算另写一篇。
+
+##### 手工收集
+
+一般是通过抓包收集接口数据或者逆向获取配置数据。
+
+- 抓包可能会需要进行证书绕过、绕过抓包限制等。
+  - 常用的软件简记
+    - [Fastboot & ADB](https://developer.android.google.cn/studio/releases/platform-tools?hl=zh_cn)
+    - [HttpCanary](https://pan.baidu.com/s/1-4YrEuNYAS_g7o34NO26xg?pwd=p7o3)
+    - [Packet Capture](https://play.google.com/store/apps/details?id=app.greyshirts.sslcapture)
+    - [Wicap](https://nalankang.lanzoui.com/b00usn8te)
+    - [Fildder](https://www.telerik.com/fiddler)+[Burpsuite](https://portswigger.net/burp)
+    - [Mitmproxy](https://mitmproxy.org/)
+    - [Charles](https://www.charlesproxy.com/)
+    - [Frida](https://github.com/frida/frida)
+    - SSL相关：[JustTrustMe++](https://github.com/JunGe-Y/JustTrustMePP)/[TrustMeAlready](https://github.com/ViRb3/TrustMeAlready)/[SSLUnpinning](https://github.com/ac-pm/SSLUnpinning_Xposed)/[Inspeckage](https://github.com/ac-pm/Inspeckage)
+    - 强制走代理：[ProxyDroid](https://play.google.com/store/apps/details?id=org.proxydroid&hl=en_SG&gl=US)/[Droni](https://play.google.com/store/apps/details?id=org.sandrob.drony)+[Burpsuite](https://portswigger.net/burp)
+    - 综合性安卓抓包/逆向/HOOK自动化脚本工具：[lamda](https://github.com/rev1si0n/lamda)/[r0capture](https://github.com/r0ysue/r0capture)/[fridaUiTools](https://github.com/dqzg12300/fridaUiTools)/[frida_hook_libart](https://github.com/lasting-yang/frida_hook_libart)
+- 逆向可能会需要进行脱壳/解码等。
+  - 常用软件简记
+    - [幸运破解器](https://pan.quark.cn/s/e597d624dd23#/list/share/c978afeb1cdc48ed9e51745006cfea6e-Lucky Patcher)
+    - [核心破解](https://github.com/Xposed-Modules-Repo/com.coderstory.toolkit)
+    - [BlackDex](https://github.com/CodingGay/BlackDex)
+    - [fdex2](https://github.com/CodingGay/BlackDex)
+    - [FART](https://github.com/hanbinglengyue/FART)
+    - [Android Killer](https://github.com/liaojack8/AndroidKiller)
+    - [午夜神大佬应用集](https://www.yuque.com/docs/share/c0691a64-3b55-4ae3-ab20-90e1daff12cd)
+
+<img src="image/image-20240722102102121.png" alt="image-20240722102102121" style="zoom:80%;" />
+
+- grep筛选
+
+  ```php
+  grep \-EHirn "accesskey|admin|aes|api\_key|apikey|checkClientTrusted|crypt|http:|https:|password|pinning|secret|SHA256|SharedPreferences|superuser|token|X509TrustManager|insert into|setJavaScriptEnabled|root|JavascriptInterface|MODE\_WORLD\_READABLE|MODE\_WORLD\_WRITEABLE|Pinner|checkServerTrusted|api\_secret|api/v1|api/v2" \--color APKfolder/  
+  \# https://twitter.com/AmitMDubey/status/1272982285277491200
+  ```
+
+##### **工具推荐：**
+
+**AppInfoScanner**
+
+> https://github.com/kelvinBen/AppInfoScanner
+>
+> 一款适用于以HW行动/红队/渗透测试团队为场景的移动端(Android、iOS、WEB、H5、静态网站)信息收集扫描工具，可以帮助渗透测试工程师、攻击队成员、红队成员快速收集到移动端或者静态WEB站点中关键的资产信息并提供基本的信息输出,如：Title、Domain、CDN、指纹信息、状态信息等。
+
+**ApkAnalyser**
+
+> https://github.com/TheKingOfDuck/ApkAnalyser
+>
+> 一键提取安卓应用中可能存在的敏感信息。
+>
+> 目前可提取APK内：
+>
+> - 所有字符串
+> - 所有URLs
+> - 所有ip
+> - 可能是hash值的字符串
+> - 存在的敏感词（如oss.aliyun）
+> - 可能是accessKey的值
+
+### 02OSINT
+
+> OSINT(Open-source intelligence) 指开源情报,一项从媒体、网络、博客、视频，等公开来源中进行信息收集、提取的技术。
+
+#### 情报相关资源
+
+- [OSINT-CN](https://start.me/p/GE7JQb/osint) 一款在线分享国内外OSINT资源和工具的网站
+- [Digital-Privacy](https://github.com/ffffffff0x/Digital-Privacy) Information Protection & OSINT resources | 一个关于数字隐私搜集、保护、清理集一体的方案,外加开源信息收集(OSINT)对抗
+- [丁爸网](http://dingba.top/)
+- 微信公众号 情报小蜜蜂 little_bee007
+- [iYouPort OSINT专栏](https://www.iyouport.org/category/osint/)
+- [sinwindie/OSINT](https://github.com/sinwindie/OSINT) - 各种平台的 OSINT "一张图" 系列
+- [blaCCkHatHacEEkr/OSINT_TIPS](https://github.com/blaCCkHatHacEEkr/OSINT_TIPS) - OSINT 技巧合集
+- [The Privacy, Security, & OSINT Show](https://inteltechniques.com/podcast.html) - 讲述、介绍各类 OSINT 技能的博客
+- [OSINT Framework](https://osintframework.com/) - 非常著名的 OSINT 框架,有着非常丰富的 OSINT 资源
+
+#### **OSINT 情报工具**
+
+- https://intelx.io/tools - 在线使用的开源情报和取证工具清单
+- [OSINT Recon Tool](https://recontool.org/#mindmap) - 在线的 osint 工具集合，加上思维脑图
+- [woj-ciech/SocialPath](https://github.com/woj-ciech/SocialPath) - 跟踪社交媒体平台上的用户
+- [Greenwolf/social_mapper](https://github.com/Greenwolf/social_mapper) - 通过面部识别跟踪不同社交平台目标的工具
+- [bhavsec/reconspider](https://github.com/bhavsec/reconspider) - 可用于扫描IP地址，电子邮件，网站，组织的 OSINT 工具
+- [SpiderFoot](https://www.spiderfoot.net/)
+
+### 03个人隐私信息
+
+#### **从邮箱查询**
+
+- [你注册过哪些网站？一搜便知](https://www.reg007.com/)
+- [Find email addresses in seconds • Hunter (Email Hunter)](https://hunter.io/) - email 信息查询工具
+
+#### 从用户名查询
+
+- [Instant Username Search](https://instantusername.com/#/) - 实时搜索100多个社交媒体网站的用户名。
+- [CheckUsernames](https://checkusernames.com/) - 测某账号是否在全球500多个社交媒体中是否有注册。
+- [WhatsMyName Web](https://whatsmyname.app/) - 搜索许多网站上存在的用户名。
+- [NameCheckup](https://namecheckup.com/) - 查找可用的用户名
+- [Namechk](https://namechk.com/)
+- [KnowEm Username Search](https://knowem.com/)
+- [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) - 在不同的社交网络上通过用户名搜寻账户
+
+#### 从IP查询
+
+- [Torrent downloads and distributions for IP](http://iknowwhatyoudownload.com/) - 查你这个IP下载过哪些磁力链接?
+
+#### 混合查询
+
+- [Username Search](https://usersearch.org/) - 找到用户名、电子邮件地址或电话号码背后的人。
+- [n0tr00t/Sreg](https://github.com/n0tr00t/Sreg) - 使用者通过输入 email、phone、username 的返回用户注册的所有互联网信息.
+- [Humanitarian Data Exchange](https://data.humdata.org/organization/facebook) - Facebook 的公开数据查询平台
+- [银行卡号归属地查询](http://cha.yinhangkadata.com/)
+- [友商发·票查询](http://fapiao.youshang.com/)
+- TG库、四件套等。
+
+#### 从注册信息查询
+
+Sms
+https://www.materialtools.com/
+http://receivefreesms.com/
+Email
+https://10minutemail.net/
+http://24mail.chacuo.net/
+https://zh.mytrashmailer.com/
+http://24mail.chacuo.net/enus
+https://www.linshiyouxiang.net/
+Fake id
+https://www.fakenamegenerator.com/
+http://www.haoweichi.com/
+https://www.fakeaddressgenerator.com/
+
+### 04历史漏洞
+
+- wooyun 历史漏洞库：http://www.anquan.us/
+- 漏洞银行：https://www.bugbank.cn/
+- 360 补天：https://www.butian.net/
+- 教育行业漏洞报告平台：https://src.edu-info.edu.cn/login/
+- seebug：https://paper.seebug.org/
+- CNVD：http://www.cnnvd.org.cn/
+- Exploit Database: [https://www.exploit-db.com](https://www.exploit-db.com/)
+- Vulners: [https://vulners.com](https://vulners.com/)
+- zone-h：http://zone-h.org/archive?hz=1
+- Sploitus: [https://sploitus.com](https://sploitus.com/)
+- 历史界面：[wayback](https://archive.org/web/)
+  - 工具：[**waybackurls**](https://github.com/tomnomnom/waybackurls)
+
+### 05蜜罐识别
+
+> 通常**将蜜罐(honeypot)定义为一种安全资源，它不需要提供实际的应用，蜜罐的存在价值就是诱导和记录攻击行为，从而了解攻击者的入侵方法和手段，并能够延缓其攻击进程**，进而根据捕获的攻击行为数据，分析攻击者使用的攻击方法和工具，从而让防御方针对性地增强系统的安全防护能力
+
+**简单识别**
+
+- [honeyscore shodan](https://honeyscore.shodan.io/)
+  - 网络空间搜索引擎
+- [Honeypot Hunter](https://send-safe-honeypot-hunter.apponic.com/)
+  - Send-Safe Honeypot Hunter 是一种工具，用于检查所谓的“蜜罐”的 HTTPS 和 SOCKS 代理列表。“蜜罐”是由试图通过使用这些虚假代理记录流量，然后向其 ISP 发送投诉的人运行的虚假代理。
+- [Chrome 蜜罐检测插件](https://github.com/iiiusky/AntiHoneypot-Chrome-simple)
+  - 需要自己完善规则的Chrome 蜜罐检测插件
+- [anti-honeypot](https://github.com/cnrstar/anti-honeypot)
+  - 一款可以检测WEB蜜罐并阻断请求的Chrome插件
+- [AntiHoneypot](https://github.com/Monyer/antiHoneypot)
+  - 一个拦截XSSI & 识别Web蜜罐的Chrome扩展
+
+# 工具向
+
+> 持续更新……
+
+- **水泽 信息收集自动化工具**
+
+https://github.com/0x727/ShuiZe_0x727
+
+> 作者：[Ske](https://github.com/SkewwG)
+>
+> 团队：[0x727](https://github.com/0x727)，未来一段时间将陆续开源工具，地址：https://github.com/0x727
+>
+> 定位：协助红队人员快速的信息收集，测绘目标资产，寻找薄弱点
+>
+> 语言：python3开发
+>
+> 功能：一条龙服务，只需要输入根域名即可全方位收集相关资产，并检测漏洞。也可以输入多个域名、C段IP等，具体案例见下文。
+>
+> 调用：脚本借用了ksubdomain爆破子域名和theHarvester收集邮箱，感谢ksubdomain和theHarvester作者
+
+- **ARL资产侦察灯塔系统**
+
+https://github.com/TophantTechnology/ARL
+
+> 旨在快速侦察与目标关联的互联网资产，构建基础资产信息库。 协助甲方安全团队或者渗透测试人员有效侦察和检索资产，发现存在的薄弱点和攻击面。
+
+- **ENScanGo**
+
+https://github.com/wgpsec/ENScan_GO
+
+> 由狼组安全团队的 Keac 师傅写的专门用来解决企业信息收集难的问题的工具，可以一键收集目标及其控股公司的 ICP 备案、APP、小程序、微信公众号等信息然后聚合导出。
+
+- [**gobuster**](https://github.com/OJ/gobuster)
+
+> 一个用于暴力破解的工具：
+>
+> - 网站中的 URI（目录和文件）。
+> - DNS 子域（支持通配符）。
+> - 目标 Web 服务器上的虚拟主机名。
+> - 打开 Amazon S3 存储桶
+
+- [**SecLists**](https://github.com/danielmiessler/SecLists)
+
+> SecLists是安全测试人员的伴侣。它是安全评估期间使用的多种类型列表的集合，收集在一个地方。列表类型包括用户名、密码、URL、敏感数据模式、模糊测试负载、Web Shell 等等。目标是使安全测试人员能够将此存储库拉到一个新的测试框上，并可以访问可能需要的每种类型的列表。
+
+- OSINT开源情报与侦察工具
+
+https://www.osint-labs.org/tools/
+
+- 本机ip地址查询
+
+https://ip.skk.moe/
+
+- 空间搜索引擎
+  - FOFA [https://fofa.info](https://fofa.info/)
+  - Quake https://quake.360.cn/quake/#/index
+  - Hunter [https://hunter.qianxin.com](https://hunter.qianxin.com/)
+  - Censys https://search.censys.io/
+  - Shadon [https://www.shodan.io](https://www.shodan.io/)
+  - ZoomEye [https://www.zoomeye.org](https://www.zoomeye.org/)
+  - Sumap https://sumap.dbappsecurity.com.cn/
+  - Soall https://soall.org/login
+  - 0.zone https://0.zone/
