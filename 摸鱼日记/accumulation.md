@@ -4704,6 +4704,12 @@ https://ip.skk.moe/
 
 # 各种加密编码类型的密文特征
 
+学习文章：
+
+```
+https://cloud.tencent.com/developer/article/1748394
+```
+
 ### rsa
 
 简介
@@ -5106,5 +5112,457 @@ RC4：RC4是一种流式加密算法，以前在SSL和WEP中被广泛使用，�
 
 ```
 1、Unicode——汉字示例&#36825;、字母示例&#116;、数字符号示例&#53;
+```
+
+# 7.23
+
+**可以说Unicode与HTML实体编码是一个东西**
+
+Unicode（统一码、万国码、单一码）是一种在计算机上使用的字符编码。Unicode 是为了解决传统的字符编码方案的局限而产生的，它为每种语言中的每个字符设定了统一并且唯一的二进制编码，以满足跨语言、跨平台进行文本转换、处理的要求。1990年开始研发，1994年正式公布。
+
+<img src="image/image-20240723085816012.png" alt="image-20240723085816012" style="zoom:80%;" />
+
+### HTML实体编码
+
+字符实体是用一个编号写入HTML代码中来代替一个字符，在使用浏览器访问网页时会将这个编号解析还原为字符以供阅读。
+
+这么做的目的主要有两个： １、解决HTML代码编写中的一些问题。例如需要在网页上显示小于号（<）和大于号（>），由于它们是HTML的预留标签，可能会被误解析。这时就需要将小于号和大于号写成字符实体： 小于号这样写：< 或 < 大于号这样写：> 或 > 前面的写法称为实体名称，后面的写法则是实体编号。[ISO-8859-1字符集](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.qqxiuzi.cn%2Fwz%2Fzixun%2F1681.htm&source=article&objectId=1748394)（西欧语言）中两百多个字符设定了实体名称，而对于其它所有字符都可以用实体编号来代替。 ２、网页编码采用了特定语言的编码，却需要显示来自其它语言的字符。例如，网页编码采用了西欧语言ISO-8859-1，却要在网页中显示中文，这时必须将中文字符以实体形式写入HTML代码中。
+
+<img src="image/image-20240723092149096.png" alt="image-20240723092149096" style="zoom:80%;" />
+
+### 16进制unicode
+
+```
+\u8fd9\u662f\u4e00
+```
+
+<img src="image/image-20240723092257924.png" alt="image-20240723092257924" style="zoom:80%;" />
+
+### **常用解密网站：**
+
+- Unicode：[www.sojson.com](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.sojson.com%2Funicode.html&source=article&objectId=1748394)
+- 16进制Unicode：[www.msxindl.com](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.msxindl.com%2Ftools%2Funicode16.asp&source=article&objectId=1748394)
+- HTML字符实体：[www.qqxiuzi.cn](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.qqxiuzi.cn%2Fbianma%2Fzifushiti.php&source=article&objectId=1748394)
+
+## 0x05：Escape编码/加密、Unescape解码/解密、%u编码、%u解码
+
+**特征：以`%u`开头**
+
+**Escape/Unescape加密解码/编码解码**,又叫%u编码，从以往经验看编码字符串出现有"u"，它是unicode编码，那么Escape编码采用是那一种unicode实现形式呢。其实是UTF-16BE模式。这样一来问题非常简单了。 **Escape编码/加密**,就是字符对应UTF-16 16进制表示方式前面加%u。**Unescape解码/解密**，就是去掉"%u"后，将16进制字符还原后，由utf-16转码到自己目标字符。如：字符“中”，UTF-16BE是：“6d93”，因此Escape是“%u6d93”，反之也一样！因为目前%字符，常用作URL编码，所以%u这样编码已经逐渐被废弃了！
+
+<img src="image/image-20240723092526006.png" alt="image-20240723092526006" style="zoom:80%;" />
+
+### **常用解密网站：**
+
+[http://web.chacuo.net/charsetescape/](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fweb.chacuo.net%2Fcharsetescape%2F&source=article&objectId=1748394)
+
+## 0x06：URL、Hex编码
+
+**这两种加密的密文是一样的，不同的是当你用url编码网站时是不会把http进行编码的，而Hex编码则全部转化了**
+
+encodeURIComponent() 函数 与 encodeURI() 函数的区别 请注意 encodeURIComponent() 函数 与 encodeURI() 函数的区别之处，前者假定它的参数是 URI 的一部分（比如协议、主机名、路径或查询字符串）。因此 encodeURIComponent() 函数将转义用于分隔 URI 各个部分的标点符号。
+
+<img src="image/image-20240723092754032.png" alt="image-20240723092754032" style="zoom:80%;" />
+
+<img src="image/image-20240723092838922.png" alt="image-20240723092838922" style="zoom:80%;" />
+
+<img src="image/image-20240723092913126.png" alt="image-20240723092913126" style="zoom:80%;" />
+
+### **常用解密网站：**
+
+Hex编码：[https://www.107000.com/T-Hex](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.107000.com%2FT-Hex&source=article&objectId=1748394) URL 编码：[https://www.sojson.com/encodeurl.html](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.sojson.com%2Fencodeurl.html&source=article&objectId=1748394)
+
+## 0x07：凯撒密码、维吉尼亚密码、栅栏密码基础型、栅栏密码W型
+
+这几类密码原理都是移位调换加密，破解难度低
+
+### 凯撒密码
+
+```
+iodj{khoor_zrug_123}
+```
+
+**只对字母进行加密，常用于CTF比赛中**
+
+凯撒密码最早由古罗马军事统帅盖乌斯·尤利乌斯·凯撒在军队中用来传递加密信息，故称凯撒密码。此为一种位移加密手段，只对26个（大小写）字母进行位移加密，规则相当简单，容易被破解。下面是明文字母表移回3位的对比： 明文字母表 X Y Z A B C D E F G H I J K L M N O P Q R S T U V W 密文字母表 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 然后A变成D，B变成E，Z变成C。 字母最多可移动25位（按字母表）。通常为向后移动，如果您想向前移动1位，则相当于向后移动25位，位移选择为25位。
+
+<img src="image/image-20240723093215102.png" alt="image-20240723093215102" style="zoom:80%;" />
+
+### 维吉尼亚密码
+
+```
+fmcg{iglmq_wptd_123}
+```
+
+**可以说是凯撒密码的加强版，引入了密钥**
+
+维吉尼亚密码，它将凯撒密码的所有26种排列放到一个表中，形成26行26列的加密字母表。此外，维吉尼亚密码必须有一个由字母组成的密钥，至少有一个字母，最多与明文字母有相同数量的字母。 在凯撒密码中，每个字母都会进行一定偏移值转换，例如，当偏移值是3时，则B被转换为E，C转换成F…。在维吉尼亚密码加密中，则是由具有不同偏移的凯撒密码构成的。 要生成密码，需要使用表格方法，此表(如图所示)包含26行字母表，每一行从上一行到左行被一位偏移。加密时使用哪一行字母表是基于密钥的，在加密过程中密钥会不断变化。 例如，假设明文为： BTTACKATDAFG 选择一个关键字并重复它以获得密钥，例如，当关键字是LIMN时，键是： LIMNLIMNLIMN 在明文中的第一个字母B，对应于密钥中的第一个字母L，使用加密字母表中的L行字母进行加密，得到第一个字母的密文M。同样，第二个明文字母是T，它用表中的I行加密，得到第二个密文B。通过类比，我们可以得到： 明文：BTTACKATDAFG 键：LIMNLIMNLIMN 密文：MBFNNSMGOIRT 解密的过程是加密的逆过程。例如，密钥的第一个字母对应的L行字母表，发现密文的第一个字母M位于B列，因此明文的第一个字母是B。密钥的第二个字母对应于I行字母表，而密文的第二个字母B位于该行的T列中，因此明文的第二个字母是T。等等，你可以得到明文。
+
+```
+代表行列，b对应l就是b横l竖的m字母
+```
+
+表格：
+
+<img src="image/image-20240723093905344.png" alt="image-20240723093905344" style="zoom: 67%;" />
+
+<img src="image/image-20240723093926327.png" alt="image-20240723093926327" style="zoom: 67%;" />
+
+### 栅栏密码基础型
+
+**栅栏密码是按一定规则将明文内容互相调换了位置**
+
+栅栏密码(Rail fence Cipher)基础型加密方式，是一种简单的移动字符位置的加密方法，首先把加密的明文分成N个一组，然后把每组的第1、第2、第M个字符连起来，形成无规律的密文字符串。
+
+例如字符串“123456789abc”，首先将字符串分成3组，如下排列： 1234 5678 9abc 依次取每一组字符，组成加密后密文：“15926a37b48c”。
+
+```
+1234
+5678
+9abc
+这样竖着把每一竖的字母连起来排列就为：
+15926a37b48c
+```
+
+<img src="image/image-20240723094303654.png" alt="image-20240723094303654" style="zoom: 67%;" />
+
+### 栅栏密码w型
+
+栅栏密码W型加密算法： 栅栏密码(Rail fence Cipher)，扩展变种W型，采用先把明文类似"W"形状进行排列，然后再按栏目顺序1-N，取每一栏的所有字符值，组成加密后密文。 比如字符串“123456789”，采用栏目数为3的时，明文将采用如下排列： 1—5---9 -2-4-6-8- –3----7– 取每一栏所有字符串，组成加密后密文：“159246837”。 W型栅栏密码加密方式，比传统型栅栏密码加密方法，算法略有增强，但目前已只能用于学习算法验证。
+
+```
+1---5---9
+-2-4-6-8-
+–3-----7–
+按照w的书写方式，来按顺序书写，最后再按照某种排列方式来组成加密密文
+```
+
+<img src="image/image-20240723094653847.png" alt="image-20240723094653847" style="zoom: 67%;" />
+
+### **常用解密网站：**
+
+- 凯撒密码：[www.qqxiuzi.cn](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.qqxiuzi.cn%2Fbianma%2Fkaisamima.php&source=article&objectId=1748394)
+- 维吉尼亚密码：[www.metools.info](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.metools.info%2Fcode%2Fc71.html&source=article&objectId=1748394)
+- 栅栏密码基础性：[www.metools.info](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.metools.info%2Fcode%2Frailfencecipher_155.html&source=article&objectId=1748394)
+- 栅栏密码W型：[www.metools.info](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.metools.info%2Fcode%2Frailfencecipher_154.html&source=article&objectId=1748394)
+- https://www.metools.info/master/
+
+## 文本隐藏加密、零宽隐写
+
+### 文本隐藏加密
+
+**特征：加密过的密文会比原文的字节数多，当你按删除键的时候会发现某一处要按好多下才能把前面的字删掉**
+
+原理**：它的原理是在密文中加入了不可见字符组成的编码，例如上述看似九个字符的一句话，通过[字数查询](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.qqxiuzi.cn%2Fzh%2Fzishu-zijieshu%2F&source=article&objectId=1748394)可知它实际上有87个字符，多出的字符是由[零宽空格](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.qqxiuzi.cn%2Fzh%2Fspace.html&source=article&objectId=1748394)实现的编码，因为零宽空格不占据空间，所以看不出它的存在。
+
+**使用**：在进行文本隐藏加密时，将需要隐藏的文字写在括号中，就像这样“你好（有才华），我好喜欢你（画的画）！”，然后加密即可隐藏括号内的文字。同时可以设定一个密码，这样只有知道密码的人才能解密隐藏的文字。密码可以是数字、字母和下划线，最多九位。
+
+<img src="image/image-20240723095047697.png" alt="image-20240723095047697" style="zoom: 67%;" />
+
+这是加密后的字节数
+
+<img src="image/image-20240723095055293.png" alt="image-20240723095055293" style="zoom: 67%;" />
+
+ 这是本来的字节数
+
+<img src="image/image-20240723095101153.png" alt="image-20240723095101153" style="zoom: 67%;" />
+
+### 零宽隐写
+
+**特征：解密后明文与密文会分开显示，密文一般隐藏在第一个字后面，不信你试试，保证你十下之内删不完**
+
+与上面文本隐藏加密的原理一样，但过程不一样
+
+<img src="image/image-20240723095209254.png" alt="image-20240723095209254" style="zoom: 67%;" />
+
+ 这里加密过的密文在文本隐藏加密中解不出来
+
+<img src="image/image-20240723095217820.png" alt="image-20240723095217820" style="zoom: 67%;" />
+
+### **常用解密网站：**
+
+文本隐藏加密：[www.qqxiuzi.cn](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.qqxiuzi.cn%2Fbianma%2Fyincangjiami.php&source=article&objectId=1748394) 零宽隐写：[yuanfux.github.io](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fyuanfux.github.io%2Fzero-width-web%2F&source=article&objectId=1748394)
+
+## 特殊暗号类加密
+
+这类加密都是特征性比较强的，易辨别
+
+### 猪圈密码
+
+**特点：只能对字母加解密并且符号无法复制，粘贴后会直接显示明文**
+
+猪圈密码（亦称朱高密码、共济会暗号、共济会密码或共济会员密码），是一种以格子为基础的简单替代式密码，曾经是美国内战时盟军使用的密码，目前仅在密码教学、各种竞赛中使用。
+
+<img src="image/image-20240723095337765.png" alt="image-20240723095337765" style="zoom: 67%;" />
+
+#### **常用解密网站：**
+
+[http://www.metools.info/code/c90.html](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.metools.info%2Fcode%2Fc90.html&source=article&objectId=1748394)
+
+### 与佛论禅
+
+**特点：就是你看不懂的佛语**
+
+<img src="image/image-20240723095521419.png" alt="image-20240723095521419" style="zoom: 80%;" />
+
+#### **常用解密网站：**
+
+[http://www.keyfc.net/bbs/tools/tudoucode.aspx](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.keyfc.net%2Fbbs%2Ftools%2Ftudoucode.aspx&source=article&objectId=1748394)
+
+### 百家姓暗号
+
+**特征：不要多说当你看到一串百家姓的时候多半就是这个暗号了**
+
+![image-20240723095531886](image/image-20240723095531886.png)
+
+当他解密的的时候前面会多一串固定字符
+
+![image-20240723095538312](image/image-20240723095538312.png)
+
+#### **常用解密网站：**
+
+- [https://www.ahz0.com/bjx.html](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.ahz0.com%2Fbjx.html&source=article&objectId=1748394)
+- [https://www.w168.net/anhao.html](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.w168.net%2Fanhao.html&source=article&objectId=1748394)
+- [https://api.dujin.org/baijiaxing/](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fapi.dujin.org%2Fbaijiaxing%2F&source=article&objectId=1748394)
+- [https://www.ddosi.com/ah.html](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.ddosi.com%2Fah.html&source=article&objectId=1748394)
+
+### 卡尔达诺栅格码
+
+**特征：把明文伪装成垃圾邮件，看着这么多内容，其实我只是加密了admin**
+
+<img src="image/image-20240723095731373.png" alt="image-20240723095731373" style="zoom:67%;" />
+
+#### **常用解密网站：**
+
+[https://www.spammimic.com/](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.spammimic.com%2F&source=article&objectId=1748394)
+
+### 莫尔斯电码
+
+**特征：密文由不规律的`.`、`/`、`-`组成**
+
+- 摩尔斯电码（Morse alphabet）（又译为摩斯电码）是一种时通时断的信号代码，这种信号代码通过不同的排列顺序来表达不同的英文字母、数字和标点符号等。
+- 由美国人摩尔斯（Samuel Finley Breese Morse）于1837年发明，为摩尔斯电报机的发明（1835年）提供了条件。
+- 摩尔密码加密的字符只有字符，数字，标点，不区分大小写，支持中文汉字
+- 中文摩斯加密解密：本工具摩尔密码加密是互联网上唯一一个可以对中文进行摩斯编码的工具。
+
+##### 莫尔斯电码加密列表 | Morse Code List
+
+**一、26个字母的莫尔斯电码加密**
+
+|      |          |      |          |      |          |      |          |
+| :--- | :------- | :--- | :------- | :--- | :------- | :--- | :------- |
+| 字符 | 电码符号 | 字符 | 电码符号 | 字符 | 电码符号 | 字符 | 电码符号 |
+| A    | ．━      | B    | ━ ．．． | C    | ━ ．━ ． | D    | ━ ．．   |
+| E    | ．       | F    | ．．━ ． | G    | ━ ━ ．   | H    | ．．．． |
+| I    | ．．     | J    | ．━ ━ ━  | K    | ━ ．━    | L    | ．━ ．． |
+| M    | ━ ━      | N    | ━ ．     | O    | ━ ━ ━    | P    | ．━ ━ ． |
+| Q    | ━ ━ ．━  | R    | ．━ ．   | S    | ．．．   | T    | ━        |
+| U    | ．．━    | V    | ．．．━  | W    | ．━ ━    | X    | ━ ．．━  |
+| Y    | ━ ．━ ━  | Z    | ━ ━ ．． |      |          |      |          |
+
+**二、数字的莫尔斯电码加密**
+
+|      |            |      |            |      |            |      |            |
+| :--- | :--------- | :--- | :--------- | :--- | :--------- | :--- | :--------- |
+| 字符 | 电码符号   | 字符 | 电码符号   | 字符 | 电码符号   | 字符 | 电码符号   |
+| 0    | ━ ━ ━ ━ ━  | 1    | ．━ ━ ━ ━  | 2    | ．．━ ━ ━  | 3    | ．．．━ ━  |
+| 4    | ．．．．━  | 5    | ．．．．． | 6    | ━ ．．．． | 7    | ━ ━ ．．． |
+| 8    | ━ ━ ━ ．． | 9    | ━ ━ ━ ━ ． |      |            |      |            |
+
+**三、标点符号的莫尔斯电码加密**
+
+| 字符 | 电码符号     | 字符 | 电码符号     | 字符 | 电码符号      | 字符 | 电码符号     |
+| :--- | :----------- | :--- | :----------- | :--- | :------------ | :--- | :----------- |
+| .    | ．━ ．━ ．━  | :    | ━ ━ ━ ．．． | ,    | ━ ━ ．．━ ━   | ;    | ━ ．━ ．━ ． |
+| ?    | ．．━ ━ ．． | =    | ━ ．．．━    | ’    | ．━ ━ ━ ━ ．  | /    | ━ ．．━ ．   |
+| !    | ━ ．━ ．━ ━  | ━    | ━ ．．．．━  | _    | ．．━ ━ ．━   | "    | ．━ ．．━ ． |
+| (    | ━ ．━ ━ ．   | )    | ━ ．━ ━ ．━  | $    | ．．．━ ．．━ | &    | ． ．．．    |
+| @    | ．━ ━ ．━ ． |      |              |      |               |      |              |
+
+<img src="image/image-20240723095856575.png" alt="image-20240723095856575" style="zoom:67%;" />
+
+**常用解密网站：**
+
+[https://www.atool99.com/morse.php](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.atool99.com%2Fmorse.php&source=article&objectId=1748394)
+
+### Quoted-Printable
+
+**这种编码常用与邮件处理，只能对汉字进行编码，特征是=加两个大写字母或数字组合**
+
+<img src="image/image-20240723100259417.png" alt="image-20240723100259417" style="zoom:80%;" />
+
+#### **常用解密网站：**
+
+- [http://www.mxcz.net/tools/QuotedPrintable.aspx](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.mxcz.net%2Ftools%2FQuotedPrintable.aspx&source=article&objectId=1748394)
+
+### ROT13
+
+**特征：它与凯撒密码差不多都是字母替换，你看到一句特别奇怪的语句可能就是它编码的**
+
+ROT13（回转13位，Template:lang，有时中间加了个减号称作ROT-13）是一种简易的置换暗码。它是一种在网路论坛用作隐藏八卦（spoiler）、妙句、谜题解答以及某些脏话的工具，目的是逃过版主或管理员的匆匆一瞥。 ROT13被描述成「杂志字谜上下颠倒解答的Usenet对等体」（Usenet equivalent of a magazine printing the answer to a quiz upside down.）Template:cite web ROT13也是过去在古罗马开发的凯撒加密的一种变体。
+
+<img src="image/image-20240723100317055.png" alt="image-20240723100317055" style="zoom:80%;" />
+
+<img src="image/image-20240723100320596.png" alt="image-20240723100320596" style="zoom:80%;" />
+
+#### **常用解密网站：**
+
+[http://www.mxcz.net/tools/rot13.aspx](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.mxcz.net%2Ftools%2Frot13.aspx&source=article&objectId=1748394)
+
+### 文本加密为汉字
+
+**特征：将明文加密成各种繁体字后面带俩等号**
+
+<img src="image/image-20240723100332956.png" alt="image-20240723100332956" style="zoom: 67%;" />
+
+它不仅可以加密成汉字，还可以加密成以下几种类型
+
+![image-20240723100341724](image/image-20240723100341724.png)
+
+比如这样：
+
+<img src="image/image-20240723100349117.png" alt="image-20240723100349117" style="zoom: 67%;" />
+
+这样：
+
+<img src="image/image-20240723100353934.png" alt="image-20240723100353934" style="zoom: 67%;" />
+
+#### **常用解密网站：**
+
+[https://www.qqxiuzi.cn/bianma/wenbenjiami.php](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fwww.qqxiuzi.cn%2Fbianma%2Fwenbenjiami.php&source=article&objectId=1748394)
+
+## js专用加密
+
+### 颜文字js加密
+
+<img src="image/image-20240723100515122.png" alt="image-20240723100515122" style="zoom:80%;" />
+
+#### **常用解密网站：**
+
+[https://utf-8.jp/public/aaencode.html](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Futf-8.jp%2Fpublic%2Faaencode.html&source=article&objectId=1748394)
+
+### jother编码
+
+**特征：只用`! + ( ) [ ] { }`这八个字符就能完成对任意字符串的编码。也可在F12中解密执行**
+
+<img src="image/image-20240723100558569.png" alt="image-20240723100558569" style="zoom:80%;" />
+
+#### **常用解密网站：**
+
+[http://tmxk.org/jother/](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Ftmxk.org%2Fjother%2F&source=article&objectId=1748394)
+
+### JSFuck编码
+
+**特征：与jother很像，只是少了`{ }`**
+
+<img src="image/image-20240723100701219.png" alt="image-20240723100701219" style="zoom:80%;" />
+
+#### **常用解密网站：**
+
+[http://www.jsfuck.com/](https://cloud.tencent.com/developer/tools/blog-entry?target=http%3A%2F%2Fwww.jsfuck.com%2F&source=article&objectId=1748394)
+
+# 常见网络协议
+
+## 概述
+
+网络协议是**为计算机网络中进行数据交换而建立的规则**、标准或者说是约定的集合。因为不同用户的数据终端可能采取的字符集是不同的，两者需要进行通信，必须要在一定的标准上进行。一个很形象地比喻就是我们的语言，我们大天朝地广人多，地方性语言也非常丰富，而且方言之间差距巨大。A地区的方言可能B地区的人根本无法接受，所以我们要为全国人名进行沟通建立一个语言标准，这就是我们的普通话的作用。同样，放眼全球，我们与外国友人沟通的标准语言是英语，所以我们才要苦逼的学习英语。
+
+![image-20240723105257048](image/image-20240723105257048.png)
+
+通用协议：
+
+```
+tcp/ip
+```
+
+## 网络层次划分
+
+```
+应表会传网数物   七层模型
+```
+
+```
+应表会   传    网    数物   tcp/ip四层模型
+```
+
+```
+应表会   传    网    数    物    tcp/ip五层模型
+```
+
+**七层模型，前面三层模型面向用户，第四层传输层完成数据传输服务**
+
+## OSI七层网络模型
+
+<img src="image/image-20240723105856503.png" alt="image-20240723105856503" style="zoom:80%;" />
+
+### 物理层
+
+**物理层确保原始的数据可在各种物理媒体上传输。**
+
+物理层记住两个重要的设备名称，中继器（Repeater，也叫放大器）和集线器。
+
+### **数据链路层**
+
+```
+1> 数据链路层为网络层提供可靠的数据传输；
+
+　　2> 基本数据单位为帧；
+
+　　3> 主要的协议：以太网协议；
+
+　　4> 两个重要设备名称：网桥和交换机。
+
+3）网络层（Network Layer）
+```
+
+### **网络层**
+
+网络层的目的是实现两个端系统之间的数据透明传送，具体功能包括寻址和路由选择、连接的建立、保持和终止等。它提供的服务使传输层不需要了解网络中的数据传输和交换技术。
+
+```
+　　1> 网络层负责对子网间的数据包进行路由选择。此外，网络层还可以实现拥塞控制、网际互连等功能；
+
+　　2> 基本数据单位为IP数据报；
+
+　　3> 包含的主要协议：
+
+　　IP协议（Internet Protocol，因特网互联协议）;
+
+　　ICMP协议（Internet Control Message Protocol，因特网控制报文协议）;
+
+　　ARP协议（Address Resolution Protocol，地址解析协议）;
+
+　　RARP协议（Reverse Address Resolution Protocol，逆地址解析协议）。
+
+　　4> 重要的设备：路由器。
+```
+
+### **传输层**
+
+第一个端到端，即主机到主机的层次。传输层负责将上层数据分段并提供端到端的、可靠的或不可靠的传输。此外，传输层还要处理端到端的差错控制和流量控制问题。 传输层的任务是根据通信子网的特性，最佳的利用网络资源，为两个端系统的会话层之间，提供建立、维护和取消传输连接的功能，负责端到端的可靠数据传输。在这一层，信息传送的协议数据单元称为段或报文。 网络层只是根据网络地址将源结点发出的数据包传送到目的结点，而传输层则负责将数据可靠地传送到相应的端口。 有关传输层的重点：
+
+```
+1> 传输层负责将上层数据分段并提供端到端的、可靠的或不可靠的传输以及端到端的差错控制和流量控制问题；
+2> 包含的主要协议：TCP协议（Transmission Control Protocol，传输控制协议）、UDP协议（User Datagram Protocol，用户数据报协议）；
+3> 重要设备：网关。
+```
+
+### **会话层**
+
+会话层管理主机之间的会话进程，即负责建立、管理、终止进程之间的会话。会话层还利用在数据中插入校验点来实现数据的同步。
+
+### 表示层
+
+表示层对上层数据或信息进行变换以保证一个主机应用层信息可以被另一个主机的应用程序理解。表示层的数据转换包括数据的加密、压缩、格式转换等。
+
+### 应用层
+
+为操作系统或网络应用程序提供访问网络服务的接口。
+
+会话层、表示层和应用层重点：
+
+```
+1> 数据传输基本单位为报文；
+2> 包含的主要协议：FTP（文件传送协议）、Telnet（远程登录协议）、DNS（域名解析协议）、SMTP（邮件传送协议），POP3协议（邮局协议），HTTP协议（Hyper Text Transfer Protocol）。
 ```
 
