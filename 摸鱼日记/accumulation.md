@@ -5786,15 +5786,15 @@ docker-compose
  vi ifcfg-ens33  编辑网络配置文件
 ```
 
-![image-20240725153748326](image/image-20240725153748326.png)
+<img src="image/image-20240725153748326.png" alt="image-20240725153748326" style="zoom:80%;" />
 
 设置为动态获取
 
-![image-20240725152702955](image/image-20240725152702955.png)
+<img src="image/image-20240725152702955.png" alt="image-20240725152702955" style="zoom:80%;" />
 
 静态配置示例，这里的ip设成自己的虚拟机网卡所对应的
 
-![image-20240725152643133](image/image-20240725152643133.png)
+<img src="image/image-20240725152643133.png" alt="image-20240725152643133" style="zoom:80%;" />
 
 重启网络并查看网络配置信息是否正确
 
@@ -5804,7 +5804,7 @@ ip addr //查看网卡信息
 cat /etc/resolv.conf //查看dns配置，这里可先不看
 ```
 
-![image-20240725154334259](image/image-20240725154334259.png)
+<img src="image/image-20240725154334259.png" alt="image-20240725154334259" style="zoom:80%;" />
 
 ## 服务配置
 
@@ -5840,11 +5840,11 @@ cat CentOS-Base.repo.bak 瞅吧眼是否成功copy
 
 查看复制
 
-![image-20240725161202805](image/image-20240725161202805.png)
+<img src="image/image-20240725161202805.png" alt="image-20240725161202805" style="zoom:80%;" />
 
 查看源配置文件
 
-![image-20240725161457163](image/image-20240725161457163.png)
+<img src="image/image-20240725161457163.png" alt="image-20240725161457163" style="zoom:80%;" />
 
 这里我们换成阿里的源，找到阿里开源的镜像站，然后查看自己的centos版本号
 
@@ -5884,11 +5884,13 @@ enabled=0
 gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
 ```
 
-![image-20240725175757617](image/image-20240725175757617.png)
+<img src="image/image-20240725175757617.png" alt="image-20240725175757617" style="zoom:80%;" />
 
 输入yum发现配置源成功
 
-![image-20240725175818303](image/image-20240725175818303.png)
+<img src="image/image-20240725175818303.png" alt="image-20240725175818303" style="zoom:80%;" />
+
+### apache、php安装
 
 安装apache
 
@@ -5906,7 +5908,7 @@ yuminstall -y httpd
 systemctl start httpd
 ```
 
-![image-20240725200748069](image/image-20240725200748069.png)
+<img src="image/image-20240725200748069.png" alt="image-20240725200748069" style="zoom:80%;" />
 
 安装php，为了解析thinkphp源码，使网站可读
 
@@ -5915,15 +5917,15 @@ yum update
 yum install  php
 ```
 
-![image-20240725202549330](image/image-20240725202549330.png)
+<img src="image/image-20240725202549330.png" alt="image-20240725202549330" style="zoom:80%;" />
 
-![image-20240725202601287](image/image-20240725202601287.png)
+<img src="image/image-20240725202601287.png" alt="image-20240725202601287" style="zoom:80%;" />
 
 这里我们装的5.4.16的版本
 
 然后找到thinkphp的低版本
 
-<img src="image/image-20240725203607686.png" alt="image-20240725203607686" style="zoom:80%;" />
+<img src="image/image-20240725203607686.png" alt="image-20240725203607686" style="zoom: 67%;" />
 
 这里我们下载到本机
 
@@ -5933,13 +5935,13 @@ yum install  php
  192.168.15.56/framework-5.0.23.zip //请求地址
 ```
 
-![image-20240725204139301](image/image-20240725204139301.png)
+<img src="image/image-20240725204139301.png" alt="image-20240725204139301" style="zoom:80%;" />
 
 成功下载文件，将压缩包解压缩到www目录下
 
 下载一个unzip解压缩文件
 
-<img src="image/image-20240725204416247.png" alt="image-20240725204416247" style="zoom:80%;" />
+<img src="image/image-20240725204416247.png" alt="image-20240725204416247" style="zoom: 80%;" />
 
 解压缩文件
 
@@ -5948,7 +5950,7 @@ unzip framework-5.0.23 解压缩
 ls 查看文件
 ```
 
-![image-20240725204538781](image/image-20240725204538781.png)
+<img src="image/image-20240725204538781.png" alt="image-20240725204538781" style="zoom:80%;" />
 
 解压缩成功，将文件重命名为 thinkphp
 
@@ -5958,7 +5960,7 @@ ls 查看
 rm framework-5.0.23 删除文件
 ```
 
-![image-20240725204757988](image/image-20240725204757988.png)
+<img src="image/image-20240725204757988.png" alt="image-20240725204757988" style="zoom:80%;" />
 
 为了能让apache启动thinkphp服务，做以下配置
 
@@ -5999,7 +6001,9 @@ DirectoryIndex index.php
 </VirtualHost>
 ```
 
-![image-20240725211850652](image/image-20240725211850652.png)
+<img src="image/image-20240725211850652.png" alt="image-20240725211850652" style="zoom:80%;" />
+
+### nginx安装
 
 后续发现太麻烦了，改成nginx
 
@@ -6016,19 +6020,19 @@ systemctl start nginx 开启nginx服务
 
 安装第三方软件库
 
-![image-20240725224635274](image/image-20240725224635274.png)
+<img src="image/image-20240725224635274.png" alt="image-20240725224635274" style="zoom:80%;" />
 
 安装nginx
 
-![image-20240725224701792](image/image-20240725224701792.png)
+<img src="image/image-20240725224701792.png" alt="image-20240725224701792" style="zoom:80%;" />
 
 启动并查看状态
 
-![image-20240725224742015](image/image-20240725224742015.png)
+<img src="image/image-20240725224742015.png" alt="image-20240725224742015" style="zoom:80%;" />
 
 访问查看nginx是否建站成功
 
-![image-20240725224851319](image/image-20240725224851319.png)
+<img src="image/image-20240725224851319.png" alt="image-20240725224851319" style="zoom:80%;" />
 
 前面的php已经安装好，现在来联动nginx和php来运行thinkphp
 
@@ -6038,16 +6042,41 @@ systemctl start nginx 开启nginx服务
 php-fpm是连接nginx（服务器）和php的桥梁，使nginx可以解析php代码
 ```
 
-![image-20240725225745806](image/image-20240725225745806.png)
+<img src="image/image-20240725225745806.png" alt="image-20240725225745806" style="zoom:80%;" />
 
 直接执行程序，可以看到可以执行
 
-![image-20240725230146830](image/image-20240725230146830.png)
+<img src="image/image-20240725230146830.png" alt="image-20240725230146830" style="zoom:80%;" />
 
-切到nginx配置文件，vim修改，这里的文件我们是nginx.conf.default,修改成下面这样（这里我们的php-FPM是监听端口形式，所以不用更改文件）
+然后更改php-fpm.conf
 
-![image-20240725231444706](image/image-20240725231444706.png)
+```
+vim /etc/php-fpm.conf 将里面的监听端口形式改成本地sock形式
+```
+
+然后切到nginx配置文件，vim修改，这里的文件我们是nginx.conf.default,修改成下面这样
+
+<img src="image/image-20240725231444706.png" alt="image-20240725231444706" style="zoom:80%;" />
+
+<img src="image/image-20240726002220337.png" alt="image-20240726002220337" style="zoom:80%;" />
 
 找到nginx的默认路径
 
-![image-20240725232555134](image/image-20240725232555134.png)
+<img src="image/image-20240725232555134.png" alt="image-20240725232555134" style="zoom:80%;" />
+
+在此路径下面vim一个index.php文件，在里面编辑php代码文件
+
+尝试访问页面看是否解析成功
+
+可以看到能够成功解析
+
+<img src="image/image-20240726004024893.png" alt="image-20240726004024893" style="zoom:67%;" />
+
+### thinkphp框架
+
+然后我们将之前下载好的thinkphp文件cp到我们的web目录下
+
+```
+cp thinkphp /usr/share/nginx/html 将thinkphp文件放在web下
+```
+
