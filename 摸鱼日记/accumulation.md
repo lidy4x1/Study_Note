@@ -5720,3 +5720,334 @@ DELETE：删除给定的URL所标志的资源。
   - 2）在客户端的传输层，把HTTP会话请求分成报文段，添加源和目的端口，如服务器使用80端口监听客户端的请求，客户端由系统随机选择一个端口如5000，与服务器进行交换，服务器把相应的请求返回给客户端的5000端口。然后使用IP层的IP地址查找目的端。
   - 3）客户端的网络层不用关系应用层或者传输层的东西，主要做的是通过查找路由表确定如何到达服务器，期间可能经过多个路由器，这些都是由路由器来完成的工作，不作过多的描述，无非就是通过查找路由表决定通过那个路径到达服务器。
   - 4）客户端的链路层，包通过链路层发送到路由器，通过邻居协议查找给定IP地址的MAC地址，然后发送ARP请求查找目的地址，如果得到回应后就可以使用ARP的请求应答交换的IP数据包现在就可以传输了，然后发送IP数据包到达服务器的地址。
+
+### ICMP协议
+
+ICMP协议又叫控制报文协议，ICMP协议用于在IP 和 路由器之间传递控制消息，描述网络是否通畅、主机是否可达、路由器是否可用等网络状态，ICMP本身并不传输数据，但对于用户间数据的传递起着重要的作用
+
+作用：
+在数据包从源主机传输到目的主机的过程中，会经历一个或多个路由器，而数据包在经过这些路由器传输过程中，可能会遇到很多问题，最终导致数据包没有成功传递给目的主机。为了了解数据包在传输过程中在哪个环节出了问题，就需要用到ICMP协议，它可以跟踪数据包，并把消息返回给源主机。 
+
+```
+DNS解析：将域名转换成对应IP地址(本机DNS缓存栈开始找—>逐级向上查找，如果根域服务器找不到，表示公网上没有该域名主机)
+
+找到IP后：通过目的IP找到对应的目的MAC地址
+
+根据目的IP计算目的主机是否和主机A处于同一网段
+
+如在同网段：接通过ARP协议解析出对应的目的MAC，跳转到底9步
+
+如不在同一网段：发送数据报到网关，现在ARP缓存表查找，通过网关IP查找MAC地址，找不到发送查询MAC广播数据报，最终返回网关自己的MAC
+
+交换机转发：在MAC地址转换表中找到对应MAC交换机接口
+
+路由器接收：分用数据报
+
+途中的设备：与第7步同样操作如目的IP对应的MAC地址不是当前设备则继续重复该操作继续往更接近目的IP的路由发送
+
+找到目的主机B，主机B的服务器开始接受分用请求，解析，最终组织响应
+
+同上述操作一样，由主机B向主机A发送数据
+
+最终主机A接受到数据报，经过分用，解析，最终得到响应 
+```
+
+# 蓝队靶场溯源
+
+## 配置、环境搭建
+
+安装：
+
+```
+docker
+docker-compose
+
+```
+
+![image-20240724111059779](image/image-20240724111059779.png)
+
+![image-20240724153430181](image/image-20240724153430181.png)
+
+# 7.25
+
+正式搭建
+
+## 网络配置
+
+安装完成之后发现是一个最小化的centos，所以我们先进行网络配置
+
+首先来更改配置文件，开启网卡暂时开成dhcp动态获取
+
+```
+ cd /etc/sysconfig/network-scripts/ //进入网络配置文件所在文件夹
+ ls //查看目录下所有文件
+ cp ifcfg-ens33 ifcfg-ens33.bak //备份原来的网络配置文件
+ ls  //再次查看，是否成功
+ vi ifcfg-ens33  编辑网络配置文件
+```
+
+![image-20240725153748326](image/image-20240725153748326.png)
+
+设置为动态获取
+
+![image-20240725152702955](image/image-20240725152702955.png)
+
+静态配置示例，这里的ip设成自己的虚拟机网卡所对应的
+
+![image-20240725152643133](image/image-20240725152643133.png)
+
+重启网络并查看网络配置信息是否正确
+
+```
+service network restart //重启网络配置
+ip addr //查看网卡信息
+cat /etc/resolv.conf //查看dns配置，这里可先不看
+```
+
+![image-20240725154334259](image/image-20240725154334259.png)
+
+## 服务配置
+
+### yum安装
+
+关闭防火墙和selinux
+
+```
+systemctl stop firewalld --临时关闭防火墙
+systemctl disable firewalld --永久关闭防火墙
+setenforce 0 --临时关闭selinux
+vim /etc/sysconfig/selinux 永久关闭selinux
+```
+
+![image-20240725155756005](image/image-20240725155756005.png)
+
+安装apache并启动服务
+
+```
+yum install -y httpd 安装apache
+systemctl start httpd 启动服务
+```
+
+在安装时发现yum源出现了问题，所以我们先来配置一下yum源
+
+```
+cd /etc/yum.repos.d 进入yum源文件
+ls 查看一下
+cp CentOS-Base.repo CentOS-Base.repo.bak 备份原有的配置源文件
+ls 查看一下是否成功
+cat CentOS-Base.repo.bak 瞅吧眼是否成功copy
+```
+
+查看复制
+
+![image-20240725161202805](image/image-20240725161202805.png)
+
+查看源配置文件
+
+![image-20240725161457163](image/image-20240725161457163.png)
+
+这里我们换成阿里的源，找到阿里开源的镜像站，然后查看自己的centos版本号
+
+<img src="image/image-20240725162321612.png" alt="image-20240725162321612" style="zoom:67%;" />
+
+<img src="image/image-20240725162920496.png" alt="image-20240725162920496" style="zoom:67%;" />
+
+这里我们直接编辑CentOS-Base-repo文件，替换成下面的
+
+```
+[base]
+name=CentOS-$releasever - Base - Aliyun
+baseurl=http://mirrors.aliyun.com/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+ 
+#released updates 
+[updates]
+name=CentOS-$releasever - Updates - Aliyun
+baseurl=http://mirrors.aliyun.com/centos/$releasever/updates/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+ 
+#additional packages that may be useful
+[extras]
+name=CentOS-$releasever - Extras - Aliyun
+baseurl=http://mirrors.aliyun.com/centos/$releasever/extras/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+ 
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-$releasever - Plus - Aliyun
+baseurl=http://mirrors.aliyun.com/centos/$releasever/centosplus/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
+```
+
+![image-20240725175757617](image/image-20240725175757617.png)
+
+输入yum发现配置源成功
+
+![image-20240725175818303](image/image-20240725175818303.png)
+
+安装apache
+
+```
+yuminstall -y httpd
+```
+
+![image-20240725200602333](image/image-20240725200602333.png)
+
+安装成功但是未启动
+
+启动apache服务
+
+```
+systemctl start httpd
+```
+
+![image-20240725200748069](image/image-20240725200748069.png)
+
+安装php，为了解析thinkphp源码，使网站可读
+
+```
+yum update
+yum install  php
+```
+
+![image-20240725202549330](image/image-20240725202549330.png)
+
+![image-20240725202601287](image/image-20240725202601287.png)
+
+这里我们装的5.4.16的版本
+
+然后找到thinkphp的低版本
+
+<img src="image/image-20240725203607686.png" alt="image-20240725203607686" style="zoom:80%;" />
+
+这里我们下载到本机
+
+开启web服务，然后将zip文件放在web目录下，再去请求，就可以省去代理的步骤
+
+```
+ 192.168.15.56/framework-5.0.23.zip //请求地址
+```
+
+![image-20240725204139301](image/image-20240725204139301.png)
+
+成功下载文件，将压缩包解压缩到www目录下
+
+下载一个unzip解压缩文件
+
+<img src="image/image-20240725204416247.png" alt="image-20240725204416247" style="zoom:80%;" />
+
+解压缩文件
+
+```
+unzip framework-5.0.23 解压缩
+ls 查看文件
+```
+
+![image-20240725204538781](image/image-20240725204538781.png)
+
+解压缩成功，将文件重命名为 thinkphp
+
+```
+mv framework-5.0.23 thinkphp 重命名文件
+ls 查看
+rm framework-5.0.23 删除文件
+```
+
+![image-20240725204757988](image/image-20240725204757988.png)
+
+为了能让apache启动thinkphp服务，做以下配置
+
+首先找到http.conf文件
+
+```
+cd etc/httpd/conf 切到此目录下
+ls 找到httpd.conf 文件
+```
+
+编辑httpd.conf文件
+
+```
+yum install vim 下载vim编辑器
+vim httpd.conf 编辑文件
+dd 删除
+```
+
+将新增配置添加到文件
+
+```
+# 开启 PHP 模块
+LoadModule php_module modules/mod_php.so
+ 
+# 设置 PHP 解析器的路径
+AddHandler php-script .php
+PHPIniDir "/etc/php.ini" #php解析器路径
+ 
+# 设置默认文档为 index.php
+DirectoryIndex index.php
+ 
+# 配置虚拟主机
+<VirtualHost *:80>
+    DocumentRoot "/var/www/html" #apache web路径
+    ServerName 127.0.0.1   #标识是哪个网站，类似监听这个网#站
+    ErrorLog "logs/example.com-error.log"
+    CustomLog "logs/example.com-access.log" common
+</VirtualHost>
+```
+
+![image-20240725211850652](image/image-20240725211850652.png)
+
+后续发现太麻烦了，改成nginx
+
+```
+yun install epel-release 安装第三方软件库
+
+源出问题了，换源，加一个阿里的epel源
+wget -O /etc/yum.repos.d/epel.repo https://mirrors.aliyun.com/repo/epel-7.repo
+
+yum install nginx 安装nginx服务
+
+systemctl start nginx 开启nginx服务
+```
+
+安装第三方软件库
+
+![image-20240725224635274](image/image-20240725224635274.png)
+
+安装nginx
+
+![image-20240725224701792](image/image-20240725224701792.png)
+
+启动并查看状态
+
+![image-20240725224742015](image/image-20240725224742015.png)
+
+访问查看nginx是否建站成功
+
+![image-20240725224851319](image/image-20240725224851319.png)
+
+前面的php已经安装好，现在来联动nginx和php来运行thinkphp
+
+这里我们要安装PHP-FPM(一种引用了fastcgi技术的接口)
+
+```
+php-fpm是连接nginx（服务器）和php的桥梁，使nginx可以解析php代码
+```
+
+![image-20240725225745806](image/image-20240725225745806.png)
+
+直接执行程序，可以看到可以执行
+
+![image-20240725230146830](image/image-20240725230146830.png)
+
+切到nginx配置文件，vim修改，这里的文件我们是nginx.conf.default,修改成下面这样（这里我们的php-FPM是监听端口形式，所以不用更改文件）
+
+![image-20240725231444706](image/image-20240725231444706.png)
+
+找到nginx的默认路径
+
+![image-20240725232555134](image/image-20240725232555134.png)
