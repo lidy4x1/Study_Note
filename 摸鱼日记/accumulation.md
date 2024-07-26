@@ -6080,3 +6080,140 @@ vim /etc/php-fpm.conf 将里面的监听端口形式改成本地sock形式
 cp thinkphp /usr/share/nginx/html 将thinkphp文件放在web下
 ```
 
+# 7.26
+
+这里要在搭好的thinkphp框架上去搭建其他服务，还需要mysql服务
+
+### mysql安装
+
+删除原有数据
+
+这里yum下载mysql数据库，下载成了php-mysqlnd，找到这个安装包，将其删除
+
+```
+rpm -qa | grep mysql 找是否有已下载的mysql安装包
+rpm -qa | grep mysql | xargs yum -y remove //批量化 删除安装包
+rpm -qa | grep mysql 再查看是否有安装包
+```
+
+发现删除干净
+
+<img src="image/image-20240726152102133.png" alt="image-20240726152102133" style="zoom:80%;" />
+
+检查是否有mysql的残留和配置文件
+
+```
+ls /etc/my.cnf //检查是否有配置文件
+rm -rf /etc/my.cnf //删除配置文件
+```
+
+可以看见删除干净，没有文件了
+
+<img src="image/image-20240726152459271.png" alt="image-20240726152459271" style="zoom:80%;" />
+
+最后检查是否还有mysql文件
+
+```
+whereis mysqlm    查看相关mysql文件
+find / -name mysql   
+rm -rf /usr/bin/mysql(等)  删除相关目录，相关文件
+find / -name mysql  验证是否删除完毕
+which mysql  检测是都含有客户端
+which mysqld  检测是否含有服务端
+```
+
+删除干净，可以安装mysql了
+
+<img src="image/image-20240726154612424.png" alt="image-20240726154612424" style="zoom:80%;" />
+
+查看自己的centos版本
+
+<img src="image/image-20240726160100414.png" alt="image-20240726160100414" style="zoom:80%;" />
+
+下载对应的安装包
+
+![image-20240726160056846](image/image-20240726160056846.png)
+
+将东西上传到web目录下，再下载
+
+<img src="image/image-20240726160745579.png" alt="image-20240726160745579" style="zoom:80%;" />
+
+解压缩文件
+
+```
+rpm -ivh mysql157-community-release-e17-11.noarch.rpm
+```
+
+检查是否解压成功
+
+```
+ls /etc/yum.repos.d/ -l  检查是否解压成功
+```
+
+发现出现两个文件，则代表解压缩成功
+
+<img src="image/image-20240726161310430.png" alt="image-20240726161310430" style="zoom:80%;" />
+
+正式安装
+
+```
+yum install -y mysql-community-server
+```
+
+<img src="image/image-20240726162514522.png" alt="image-20240726162514522" style="zoom:80%;" />
+
+检查是否安装成功
+
+<img src="image/image-20240726162623995.png" alt="image-20240726162623995" style="zoom:80%;" />
+
+尝试启动服务，并且尝试登录，发现无法登录，因为我们没有密码
+
+<img src="image/image-20240726162848778.png" alt="image-20240726162848778" style="zoom:80%;" />
+
+```
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('admin123')
+```
+
+修改配置文件
+
+```
+vim /etc/my.cnf  
+```
+
+在最后一行加上
+
+```
+skip-grant-tables 
+```
+
+再次输入mysql -u root -p 这里不输入密码，回车进入数据库
+
+输入修改密码语句
+
+```
+FLUSH PRIVILEGES;
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'admin123';
+```
+
+修改密码成功
+
+<img src="image/image-20240726164821424.png" alt="image-20240726164821424" style="zoom:80%;" />
+
+再次修改cnf文件，将新增行删除
+
+<img src="image/image-20240726164926913.png" alt="image-20240726164926913" style="zoom: 80%;" />
+
+检测数据库无异常
+
+密码设置成功
+
+对于mysql做一些配置
+
+```
+vim /etc/my.cnf   // 进入MySQL 的配置文件
+port=3306
+character-set-server=utf8
+default-storage-engine=innodb
+```
+
+<img src="image/image-20240726165421978.png" alt="image-20240726165421978" style="zoom:80%;" />
