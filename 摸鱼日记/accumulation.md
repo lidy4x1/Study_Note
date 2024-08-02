@@ -5890,7 +5890,7 @@ gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
 
 <img src="image/image-20240725175818303.png" alt="image-20240725175818303" style="zoom:80%;" />
 
-### apache、php安装
+### apache、php、thinkphp安装
 
 安装apache
 
@@ -6003,7 +6003,7 @@ DirectoryIndex index.php
 
 <img src="image/image-20240725211850652.png" alt="image-20240725211850652" style="zoom:80%;" />
 
-### nginx安装
+### nginx安装、php-fpm
 
 后续发现太麻烦了，改成nginx
 
@@ -6044,7 +6044,7 @@ php-fpm是连接nginx（服务器）和php的桥梁，使nginx可以解析php代
 
 <img src="image/image-20240725225745806.png" alt="image-20240725225745806" style="zoom:80%;" />
 
-直接执行程序，可以看到可以执行
+直接执行程序，可以看到可以执行-
 
 <img src="image/image-20240725230146830.png" alt="image-20240725230146830" style="zoom:80%;" />
 
@@ -6217,3 +6217,184 @@ default-storage-engine=innodb
 ```
 
 <img src="image/image-20240726165421978.png" alt="image-20240726165421978" style="zoom:80%;" />
+
+# 7.29
+
+### 完善web服务
+
+首先关闭防火墙
+
+然后打开所有服务，nginx，php-fpm，mysql
+
+找到thinkphp的cms
+
+```
+通过本地下载
+```
+
+下载后通过指引安装
+
+```
+在浏览器打开地址就会开始安装：
+http://192.168.83.156/NoneCMS/public/install/index.php
+```
+
+```
+http://192.168.108./Boot-CMS-master.zip
+```
+
+# 7.30
+
+报错
+
+# 7.31
+
+报错
+
+# 8.1
+
+发现报错第一个原因是因为，在nginx配置文件中，仅改正了三分之一的配置文件，应该全部都和php相关联
+
+第二个报错还是发现是php的版本问题，不想搞了你大爷的。
+
+### 更换php版本5.6
+
+还是将php版本改为5.6以上
+
+删除原来的php版本
+
+```
+sudo yum remove php* -y
+```
+
+再查看是否删除干净
+
+安装php5.6
+
+#### 安装remi
+
+```
+sudo yum install -y https://rpms.remirepo.net/enterprise/remi-release-7.rpm
+```
+
+<img src="image/image-20240801191434005.png" alt="image-20240801191434005" style="zoom:80%;" />
+
+#### 安装yum工具
+
+来配置remi仓库
+
+```
+sudo yum install -y yum-utils
+```
+
+<img src="image/image-20240801191540831.png" alt="image-20240801191540831" style="zoom:80%;" />
+
+#### 启用php5.6版本的remi仓库
+
+```
+sudo yum-config-manager --enable remi-php56
+```
+
+<img src="image/image-20240801191713906.png" alt="image-20240801191713906" style="zoom:80%;" />
+
+#### 安装php、php-fpm、php-common
+
+```
+sudo yum install -y php php-cli php-fpm php-common
+```
+
+<img src="image/image-20240801191802736.png" alt="image-20240801191802736" style="zoom:80%;" />
+
+#### 查看php、php-fpm版本
+
+<img src="image/image-20240801191849787.png" alt="image-20240801191849787" style="zoom:80%;" />
+
+![image-20240801192455645](image/image-20240801192455645.png)
+
+终于成功！！
+
+然后将etc/nginx/nginx.conf文件进行一个修改，改一下端口或者fpm.sock文件的地址
+
+尝试访问
+
+<img src="image/image-20240801194224124.png" alt="image-20240801194224124" style="zoom:67%;" />
+
+可以看到更改版本成功
+
+更改一下未启用的拓展
+
+#### php启用gd拓展
+
+php启用php56remi仓库
+
+```
+sudo yum-config-manager --enable remi-php56
+下载php-gd yum install php-gd
+```
+
+<img src="image/image-20240801194832729.png" alt="image-20240801194832729" style="zoom:80%;" />
+
+<img src="image/image-20240801194835703.png" alt="image-20240801194835703" style="zoom:80%;" />
+
+下载好拓展之后重启php-fpm
+
+<img src="image/image-20240801195300568.png" alt="image-20240801195300568" style="zoom:80%;" />
+
+发现支持php-fpm了
+
+<img src="image/image-20240801195317559.png" alt="image-20240801195317559" style="zoom: 67%;" />
+
+#### php启用mbstring拓展
+
+使用remi56仓库
+
+```
+sudo yum-config-manager --enable remi-php56
+```
+
+下载php-mbstring拓展
+
+```
+sudo yum install php php-mbstring
+```
+
+<img src="image/image-20240801195552320.png" alt="image-20240801195552320" style="zoom: 80%;" />
+
+<img src="image/image-20240801195555268.png" alt="image-20240801195555268" style="zoom:80%;" />
+
+重启php-fpm
+
+<img src="image/image-20240801195701750.png" alt="image-20240801195701750" style="zoom:67%;" />
+
+发现支持mbstring拓展
+
+#### php启用mysql拓展
+
+一样的步骤
+
+然后直接下载php-mysql拓展
+
+<img src="image/image-20240801200135568.png" alt="image-20240801200135568" style="zoom:80%;" />
+
+<img src="image/image-20240801200138188.png" alt="image-20240801200138188" style="zoom:80%;" />
+
+重启php-fpm服务，可以看到已经OK了
+
+<img src="image/image-20240801200254685.png" alt="image-20240801200254685" style="zoom:67%;" />
+
+### 安装cms
+
+<img src="image/image-20240801200416890.png" alt="image-20240801200416890" style="zoom:80%;" />
+
+下一步，安装成功
+
+<img src="image/image-20240801200424891.png" alt="image-20240801200424891" style="zoom:80%;" />
+
+访问网站首页，勉强成功，后台还是报错
+
+<img src="image/image-20240801200744481.png" alt="image-20240801200744481" style="zoom:67%;" />
+
+# 8.2
+
+解决报错发现是伪静态的原因，修改了一下nginx的配置文件，对于php文件格式的解析，做了更详细的配置，解决了后台报错。主页面报错是因为，图片前面有跟/，会被js解析成根目录下的图片，所以加载不出来，手动去改，就可以看到图片。
+
