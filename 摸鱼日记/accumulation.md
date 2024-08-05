@@ -6398,3 +6398,379 @@ sudo yum install php php-mbstring
 
 解决报错发现是伪静态的原因，修改了一下nginx的配置文件，对于php文件格式的解析，做了更详细的配置，解决了后台报错。主页面报错是因为，图片前面有跟/，会被js解析成根目录下的图片，所以加载不出来，手动去改，就可以看到图片。
 
+**补充小知识**
+
+## 伪静态
+
+### fastcgi
+
+#### cgi
+
+通用网关接口（Common Gateway Interface/CGI）描述了客户端和服务器程序之间传输数据的一种标准，可以让一个客户端从网页浏览器向执行在网络服务器上的程序请求数据。CGI 独立于任何语言的，CGI 程序可以用任何脚本语言或者是完全独立编程语言实现，只要这个语言可以在这个系统上运行。
+
+<img src="image/image-20240802145118478.png" alt="image-20240802145118478" style="zoom:80%;" />
+
+```
+1、用户通过浏览器访问服务器, 发送了一个请求, 请求的url如上
+
+2、服务器接收数据, 对接收的数据进行解析
+
+3、nginx对于一些登录数据不知道如何处理, nginx将数据发送给了cgi程序
+
+4、服务器端会创建一个cgi进程，CGI进程执行
+加载配置, 如果有需求加载配置文件获取数据
+连接其他服务器: 比如数据库
+逻辑处理得到结果， 将结果发送给服务器
+线程结束生命退出
+
+5、服务器将cgi处理结果发送给客户端
+6、弊端：在服务器端CGI进程会被频繁的创建销毁，服务器开销大, 效率低
+```
+
+#### fastcgi
+
+快速通用网关接口FastCommonGatewayInterface是通用网关接口CGI的改进，描述了客户端和服务器程序之间传输数据的一种标准。
+
+FastCGI致力于减少Web服务器与CGI程序之间互动的开销，从而使服务器可以同时处理更多的Web请求。
+
+与为每个请求创建新的进程不同，FastCGI使用持续的进程来处理一连串的请求（线程不会被销毁）。
+
+这些进程由FastCGI进程管理器管理，而不是web服务器。
+
+fastCGI与CGI的区别：CGI 就是所谓的短生存期应用程序，FastCGI 就是所谓的长生存期应用程序。FastCGI像是一个常驻(long-live)型的CGI，它可以一直执行着，不会每次都要花费时间去fork一次
+
+![1](image/image-20240802151355000.png)
+
+```
+1、用户通过浏览器访问服务器, 发送了一个请求, 请求的url如上
+
+2、服务器接收数据, 对接收的数据进行解析
+
+3nginx对于一些登录数据不知道如何处理, nginx将数据发送给了fastcgi程序
+通过本地套接字
+网络通信的方式
+
+4、fastCGI程序如何启动：不是有web服务器直接启动，通过一个fastCGI进程管理器启动
+加载配置（可选）
+连接服务器 - 数据库，循环
+服务器有请求 -> 处理，将处理结果发送给服务器：本地套接字、网络通信
+没有请求 -> 阻塞
+
+5、服务器将fastCGI的处理结果发送给客户端
+
+6、fastcgi启动
+```
+
+**nginx+fastcgi**
+
+nginx不能像apache那样直接执行外部可执行程序，但nginx可以作为代理服务器，将请求转发给后端服务器（主要作用），
+
+其中nginx就可以支持FastCGI作为代理，由nginx接收客户端的请求，然后将请求转发给fastcgi进程进行实际处理。
+
+使用spawn-fcgi作为FastCGI进程的管理器，管理fastcgi进程，spawn-fcgi使用pre-fork 模型，功能主要是打开监听端口，绑定地址，然后fork-and-exec创建我们编写的fastcgi应用程序进程，退出完成工作。
+
+![image-20240802154309979](image/image-20240802154309979.png)
+
+```
+客户端访问, 发送请求
+nginx web服务器, 无法处理用户提交的数据
+spawn-fcgi - 通信过程中的服务器角色
+被动接收数据
+在spawn-fcgi启动的时候给其绑定IP和端口
+fastCGI程序
+开发者编写的 -> login.c -> 可执行程序( login )
+使用 spawn-fcgi 进程管理器启动 login 程序, 得到一进程
+```
+
+**nginx的数据转发**
+
+需要修改nginx的配置文件 nginx.conf
+
+```
+通过请求的 url http://localhost/login?user=zhang3&passwd=123456&age=12&sex=man 转换为一个指令:
+	- 去掉协议
+	- 去掉域名/IP + 端口
+	- 如果尾部有文件名 去掉
+	- 去掉 ? + 后边的字符串
+	- 剩下的就是服务器要处理的指令: /login
+location /login
+{
+    # 转发这个数据, fastCGI进程
+    fastcgi_pass 地址信息:端口;
+    # fastcgi.conf 和nginx.conf在同一级目录: /usr/local/nginx/conf
+    # 这个文件中定义了一些http通信的时候用到环境变量, nginx赋值的
+    include fastcgi.conf;
+}
+地址信息: 
+	- localhost
+	- 127.0.0.1
+	- 192.168.1.100
+端口: 找一个空闲的没有被占用的端口即可
+```
+
+**spawn-fcgi启动**
+
+```
+# 前提条件: fastCGI程序已经编写完毕 -> 可执行文件 login
+spawn-fcgi -a IP地址 -p 端口 -f fastcgi可执行程序
+ - IP地址: 应该和nginx的 fastcgi_pass 配置项对应
+ 	- nginx: localhost   ->   IP: 127.0.0.1
+	- nginx: 127.0.0.1	 ->   IP: 127.0.0.1
+	- nginx: 192.168.1.100   ->    IP: 192.168.1.100
+- 端口:
+	应该和nginx的 fastcgi_pass 中的端口一致
+```
+
+**fastCGI进程处理**
+
+```
+// http://localhost/login?user=zhang3&passwd=123456&age=12&sex=man
+// 要包含的头文件
+#include "fcgi_config.h" // 可选
+#include "fcgi_stdio.h" // 必须的, 编译的时候找不到这个头文件, find->path , gcc -I
+// 编写代码的流程
+int main()
+{
+    // FCGI_Accept()是一个阻塞函数, nginx给fastcgi程序发送数据的时候解除阻塞
+    while (FCGI_Accept() >= 0)
+    {
+        // 1. 接收数据
+        // 1.1 get方式提交数据 - 数据在请求行的第二部分
+        // user=zhang3&passwd=123456&age=12&sex=man
+        char *text = getenv("QUERY_STRING"); 
+        // 1.2 post方式提交数据
+        char *contentLength = getenv("CONTENT_LENGTH");
+        // 根据长度大小判断是否需要循环
+        
+        // 2. 按照业务流程进行处理
+        
+        // 3. 将处理结果发送给nginx（纯文本|json|html|...）
+        // 数据回发的时候, 需要告诉nginx处理结果的格式 - 假设是html格式
+        printf("Content-type: text/html\r\n");
+        printf("<html>处理结果</html>");
+    }
+}
+
+```
+
+- 一个文件描述符在内核中对应两块缓冲区，读缓冲区、写缓冲区
+- 利用dup2函数对标准输入输出进行了重定向，重定向到fd对应的读写缓冲区中
+- 所以对标准输入输出的操作其实就是对fd文件描述符的操作
+
+<img src="image/image-20240802161809584.png" alt="image-20240802161809584" style="zoom:80%;" />
+
+**fastcgi总结**
+
+fastCGI是什么?：运行在服务器端的代码, 帮助服务器处理客户端提交的动态请求
+
+fastCGI作用：帮助服务器处理客户端提交的动态请求，
+
+fastCGI如何使用？
+
+**fastCGI如何获取数据？nginx解析客户端发送的http请求然后转发**
+
+```
+分析出客户端请求对应的指令 -- /test
+location /test
+{
+    # nginx转发出去给fastcgi程序
+    fastcgi_pass 地址:端口;
+    include fastcgi.conf;//nginx对http请求解析得到的环境变量
+}
+
+```
+
+**fastcgi如何接收数据？spawn-fcgi与fastcgi是父子进程关系，**
+
+```
+# 启动, 通过spawn-fcgi启动
+spawn-fcgi -a IP -p port -f ./fcgi
+# 编写fastCGI程序的时候
+ - 接收数据: 调用读终端的函数就是接收数据
+ - 发送数据: 调用写终端的函数就是发送数据
+```
+
+**fastcgi如何处理数据？**
+
+```
+// 编写登录的fastCgI程序
+int main()
+{
+    while(FCGI_Accept() >= 0)
+    {
+        // 1. 接收登录信息 -> 环境变量中(post|get)
+        // post -> 读数据块的长度 CONTENT-LENGTH
+        // get -> 从请求行的第二部分读 QUEERY_STRING
+        
+        // 2. 处理数据
+        
+        // 3. 回发结果 -> 格式假设是json
+        printf("Content-type: application/json");
+        printf("{\"status\":\"OK\"}")
+    }
+}
+
+```
+
+### 伪静态详解
+
+```
+伪静态即是网站本身是动态网页如.php、.asp、.aspx等格式动态网页有时这类动态网页还跟"?"加参数来读取数据库内不同资料，伪静态就是做url重写操作(即rewrite)。很典型的案例即是discuz论坛系统，后台就有一个设置伪静态功能，开启伪静态后，动态网页即被转换重写成静态网页类型页面，通过浏览器访问地址和真的静态页面没区别。但是记住：做伪静态的前提就是服务器要支持伪静态重写URL Rewrite功能。
+
+考虑搜索引擎优化(即SEO)，将动态网页通过服务器处理成静态页面，如www.kevin.com/jk/fd.php?=12这样的动态网页处理成www.kevin.com/jk-fd-12.html这样格式静态页面，常见的论坛帖子页面，都是经过伪静态处理成静态页面格式html页面。由于网站所用的程序语言不易被发现，经过重写来伪静态来将动态网页的程序后缀变为html的静态页面格式。伪静态是一种可以把文件后缀改成任何可能的一种方法，比如如果想把php文件伪静态成html文件，这种配置相当简单的，后面会提到相应配置。
+```
+
+### **真静态与伪静态**
+
+真静态(html)优点；1)减少服务器对数据响应的负荷；2)加载不用调动数据库，响应速度快。 
+
+真静态缺点：1)维护不方便，每次都要手动生成；2)空间占用比较大,容易造成磁盘压力；3)生成的文件多，服务器对html文件的响应负担也较重。
+
+伪静态(url重写)优点：1)可以方便的实现对化化引擎的优化，并且比生成静态更加方便；2)占空间比较小；3)首页每天都自动变化，不用维护。网站首页一般都有热点排行之类的，你可以设为，24小时排行，一周排行，再加上最新文章，最新点评等。这样首页天天是有变化的；4)便于广告的轮显。比如：你可以把 art1234.aspx，这个虚成n个页,如art_1234.aspx,news_1234.aspx，top_1234.aspx，在不同的页面放 不同的广告。总之是动态的，就可以随意动。 
+
+伪静态缺点：1)如果流量稍大一些使用伪静态就出现CPU使用超负荷,因为伪静态是用正则判断而不是真实地址，分辨到底显示哪个页面的责任也由直接指定转由CPU来判断了，所以CPU占有量的上升，确实是伪静态最大的弊病；2)伪静态效率不如生成html的，因为它不是真正意义上的静态页，所以每次请求都是要去读取数据库的信息（这个可以用缓存技术来补偿一下）。
+
+### 真静态和伪静态的区别 
+
+1)是不是一个真正静态页面； 
+
+2)有没有和数据库或后台程序进行交互； 
+
+3)它们的应用场景和解决的问题不同； 
+
+4)用javascript:alert(document.lastModified)来判断是真静态还是伪静态；
+
+### **伪静态的实现** 
+
+伪静态是相对于真静态而言的,就是把一些asp，php等结尾url通过apche或nginx的重写规则，变成以html一类的静态页面形式。伪静态不是真正的静态，它和动态地址一样要读取数据库。伪静态最主要的作用就是利于seo，百度spider(百度蜘蛛)喜欢抓取静态页面，可容易使百度spider陷入死循环；并发量高的时候会加大服务器的压力，所以用的时候要注意。
+
+伪静态就是利用apche，nginx重写规则，对url地址重写实现的！伪静态实现原理: 1) Apache伪静态前提是要打开apache的重写模块 (即打开"LoadModule rewrite_module modules/mod_rewrite.so"这一行)； 2) Nginx默认就支持伪静态；
+
+伪静态有两种配置方式 1) 在配置[虚拟主机](https://cloud.tencent.com/product/lighthouse?from_column=20065&from=20065)的时候设置； 2) 在web根目录下创建一个.htaccess文件，在这个文件里面配置；
+
+### rewirte伪静态参数配置
+
+**正则表达式匹配，其中：**
+
+1. \* ~ 为区分大小写匹配
+2. \* ~* 为不区分大小写匹配
+3. \* !~和!~*分别为区分大小写不匹配及不区分大小写不匹配
+
+**文件及目录匹配，其中：**
+
+1. \* -f和!-f用来判断是否存在文件
+2. \* -d和!-d用来判断是否存在目录
+3. \* -e和!-e用来判断是否存在文件或目录
+4. \* -x和!-x用来判断文件是否可执行
+
+**flag标记有：**
+
+1. \* last 相当于Apache里的[L]标记，表示完成rewrite
+
+2. \* break 终止匹配, 不再匹配后面的规则
+
+3. \* redirect 返回302临时重定向 地址栏会显示跳转后的地址
+
+4. \* permanent 返回301永久重定向 地址栏会显示跳转后的地址
+
+   **一些可用的全局变量有，可以用做条件判断(待补全)**
+
+```
+
+$args
+$content_length
+$content_type
+$document_root
+$document_uri
+$host
+$http_user_agent
+$http_cookie
+$limit_rate
+$request_body_file
+$request_method
+$remote_addr
+$remote_port
+$remote_user
+$request_filename
+$request_uri
+$query_string
+$scheme
+$server_protocol
+$server_addr
+$server_name
+$server_port
+$uri
+```
+
+# 8.3
+
+### thinkphp伪静态
+
+URL伪静态通常是为了满足更好的SEO效果，ThinkPHP支持伪静态URL设置，可以通过设置`url_html_suffix`参数随意在URL的最后增加你想要的静态后缀，而不会影响当前操作的正常执行。例如，我们在`route.php`中设置
+
+```
+'url_html_suffix' => 'shtml'
+```
+
+的话，我们可以把下面的URL
+
+```
+http://serverName/blog/read/id/1
+```
+
+变成
+
+```
+http://serverName/blog/read/id/1.shtml
+```
+
+后者更具有静态页面的URL特征，但是具有和前面的URL相同的执行效果，并且不会影响原来参数的使用。
+
+默认情况下，伪静态的设置为`html`，如果我们设置伪静态后缀为空字符串，
+
+```
+'url_html_suffix'=>''
+```
+
+则支持所有的静态后缀访问，如果要获取当前的伪静态后缀，可以使用`Request`对象的`ext`方法。
+
+例如：
+
+```
+http://serverName/blog/3.html
+http://serverName/blog/3.shtml
+http://serverName/blog/3.xml
+http://serverName/blog/3.pdf
+```
+
+都可以正常访问。
+
+我们可以在控制器的操作方法中获取当前访问的伪静态后缀，例如：
+
+```
+$ext = Request::ext();
+```
+
+如果希望支持多个伪静态后缀，可以直接设置如下：
+
+```
+// 多个伪静态后缀设置 用|分割
+'url_html_suffix' => 'html|shtml|xml'
+```
+
+那么，当访问 `http://serverName/blog/3.pdf` 的时候会报系统错误。
+
+如果要关闭伪静态访问，可以设置
+
+```
+// 关闭伪静态后缀访问
+'url_html_suffix' => false,
+```
+
+关闭伪静态访问后，不再支持伪静态方式的URL访问，并且伪静态后缀将会被解析为最后一个参数的值，例如：
+
+```
+http://serverName/blog/read/id/3.html
+```
+
+最终的id参数的值将会变成 `3.html`。
