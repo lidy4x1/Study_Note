@@ -6810,51 +6810,6 @@ http {
 }
 ```
 
-根据示例的配置我们来确定自己的配置文件
-
-```
-
-http {
-    # 基本HTTP服务器配置
-    server {
-        listen 80;                 # 监听端口（这里是填写的反代服务器的端口，可以做更改）
-        server_name example.com;   # 绑定域名（这里填写反代地址）
- 
-        # 匹配所有请求，将它们转发到后端服务器
-        location / {
-            proxy_pass http://backend-server:8080;  # 后端服务器地址与端口（填写被代理的服务器的地址，以及nginx开放服务的端口）
-            proxy_set_header Host $host;             # 保留原始Host头
-            proxy_set_header X-Real-IP $remote_addr; # 传递真实客户端IP
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;  # 传递请求协议（http/https）
- 
-            # 其他可选配置，如缓存、超时、重试等
-        }
-    }
-}
-
-则为：
-http {
-    server {
-        listen 80; 
-        server_name 192.168.111.129; 
-        location / {
-            proxy_pass http://192.168.111.132:80;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme; 
-
-        }
-    }
-}
-
-```
-
-```
-wget http://192.168.221.234\nginx-1.20.2.zip
-```
-
 # 8.6
 
 对于配置文件做更改
@@ -6893,12 +6848,13 @@ taskkill /f /t /pid pid号码
 
 然后再来双击nginx.exe文件
 
-<img src="image/image-20240806144409799.png" alt="image-20240806144409799" style="zoom:80%;" />
+<img src="image/image-20240806154716934.png" alt="image-20240806154716934" style="zoom:67%;" />
 
 站点成功
 
 然后配置nginx.conf文件，加入代理模块配置，成功代理
 
-<img src="image/image-20240806150655884.png" alt="image-20240806150655884" style="zoom:80%;" />
+<img src="image/image-20240806154654866.png" alt="image-20240806154654866" style="zoom:67%;" />
 
 ## docker逃逸复现
+
