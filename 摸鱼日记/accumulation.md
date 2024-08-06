@@ -6398,7 +6398,7 @@ sudo yum install php php-mbstring
 
 解决报错发现是伪静态的原因，修改了一下nginx的配置文件，对于php文件格式的解析，做了更详细的配置，解决了后台报错。主页面报错是因为，图片前面有跟/，会被js解析成根目录下的图片，所以加载不出来，手动去改，就可以看到图片。
 
-**补充小知识**
+# **补充小知识**
 
 ## 伪静态
 
@@ -6702,8 +6702,6 @@ $server_port
 $uri
 ```
 
-# 8.3
-
 ### thinkphp伪静态
 
 URL伪静态通常是为了满足更好的SEO效果，ThinkPHP支持伪静态URL设置，可以通过设置`url_html_suffix`参数随意在URL的最后增加你想要的静态后缀，而不会影响当前操作的正常执行。例如，我们在`route.php`中设置
@@ -6774,3 +6772,133 @@ http://serverName/blog/read/id/3.html
 ```
 
 最终的id参数的值将会变成 `3.html`。
+
+# 8.5
+
+## 配置反向代理
+
+**首先在我们的windows（反代服务器）上安装nginx服务**
+
+Nginx的反向代理配置主要在nginx.conf或包含的子配置文件（如sites-enabled/*.conf）中进行。配置主要包括以下部分：
+
+HTTP服务器块 (server): 定义监听的IP地址、端口以及与之关联的域名（server_name）。
+
+位置块 (location): 根据请求URI进行匹配，并定义在此范围内应执行的操作，如反向代理。
+
+反向代理指令 (proxy_pass): 指定请求应被转发到的后端服务器的URL。Nginx将替换匹配到的位置块中的URI，并将其发送到指定的后端服务器。
+
+### nginx反向代理配置
+
+```
+http {
+    # 基本HTTP服务器配置
+    server {
+        listen 80;                 # 监听端口
+        server_name example.com;   # 绑定域名
+ 
+        # 匹配所有请求，将它们转发到后端服务器
+        location / {
+            proxy_pass http://backend-server:8080;  # 后端服务器地址与端口
+            proxy_set_header Host $host;             # 保留原始Host头
+            proxy_set_header X-Real-IP $remote_addr; # 传递真实客户端IP
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;  # 传递请求协议（http/https）
+ 
+            # 其他可选配置，如缓存、超时、重试等
+        }
+    }
+}
+```
+
+根据示例的配置我们来确定自己的配置文件
+
+```
+
+http {
+    # 基本HTTP服务器配置
+    server {
+        listen 80;                 # 监听端口（这里是填写的反代服务器的端口，可以做更改）
+        server_name example.com;   # 绑定域名（这里填写反代地址）
+ 
+        # 匹配所有请求，将它们转发到后端服务器
+        location / {
+            proxy_pass http://backend-server:8080;  # 后端服务器地址与端口（填写被代理的服务器的地址，以及nginx开放服务的端口）
+            proxy_set_header Host $host;             # 保留原始Host头
+            proxy_set_header X-Real-IP $remote_addr; # 传递真实客户端IP
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;  # 传递请求协议（http/https）
+ 
+            # 其他可选配置，如缓存、超时、重试等
+        }
+    }
+}
+
+则为：
+http {
+    server {
+        listen 80; 
+        server_name 192.168.111.129; 
+        location / {
+            proxy_pass http://192.168.111.132:80;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme; 
+
+        }
+    }
+}
+
+```
+
+```
+wget http://192.168.221.234\nginx-1.20.2.zip
+```
+
+# 8.6
+
+对于配置文件做更改
+
+<img src="image/image-20240806100142489.png" alt="image-20240806100142489" style="zoom:80%;" />
+
+我们找到之前测试的进程，把它杀亖
+
+```
+tasklist |findstr "nginx.exe"
+```
+
+<img src="image/image-20240806100812991.png" alt="image-20240806100812991" style="zoom:80%;" />
+
+全部嘎掉
+
+根据pid来杀亖
+
+```
+taskkill /f /t /pid pid号码
+```
+
+<img src="image/image-20240806101343412.png" alt="image-20240806101343412" style="zoom:80%;" />
+
+可以根据全称来杀亖全部进程
+
+<img src="image/image-20240806101827681.png" alt="image-20240806101827681" style="zoom:80%;" />
+
+杀亖大部分进程，再尝试单独杀亖拒绝访问的进程
+
+找到父进程1876杀亖
+
+可以看到全部清理干净
+
+<img src="image/image-20240806102541869.png" alt="image-20240806102541869" style="zoom:80%;" />
+
+然后再来双击nginx.exe文件
+
+<img src="image/image-20240806144409799.png" alt="image-20240806144409799" style="zoom:80%;" />
+
+站点成功
+
+然后配置nginx.conf文件，加入代理模块配置，成功代理
+
+<img src="image/image-20240806150655884.png" alt="image-20240806150655884" style="zoom:80%;" />
+
+## docker逃逸复现
