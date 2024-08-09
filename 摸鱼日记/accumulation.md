@@ -6858,3 +6858,66 @@ taskkill /f /t /pid pid号码
 
 ## docker逃逸复现
 
+现做调整
+
+```
+将原先的cms绑定宿主机的另一个网卡
+在docker中搭建web服务，并且反代服务器代理改为dockerweb服务
+```
+
+### 安装docker
+
+先安装docker的依赖包
+
+```
+ yum install -y yum-utils
+```
+
+<img src="image/image-20240809093609063.png" alt="image-20240809093609063" style="zoom:80%;" />
+
+<img src="image/image-20240809093823319.png" alt="image-20240809093823319" style="zoom:80%;" />
+
+设置docker稳定镜像库,更新本地镜像源
+
+```
+# 设置docker镜像源
+1 yum-config-manager \
+   2  --add-repo \
+ 3   https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    
+4 sed -i 's/download.docker.com/mirrors.aliyun.com\/docker-ce/g' /etc/yum.repos.d/docker-ce.repo
+
+5 yum makecache fast
+```
+
+<img src="image/image-20240809094309366.png" alt="image-20240809094309366" style="zoom:80%;" />
+
+<img src="image/image-20240809094318879.png" alt="image-20240809094318879" style="zoom:80%;" />
+
+安装docker（社区版）
+
+```
+yum install docker-ce docker-ce-cli containerd.io
+```
+
+<img src="image/image-20240809094501410.png" alt="image-20240809094501410" style="zoom:80%;" />
+
+<img src="image/image-20240809095343855.png" alt="image-20240809095343855" style="zoom:80%;" />
+
+启动docker服务，看是否成功
+
+<img src="image/image-20240809095555647.png" alt="image-20240809095555647" style="zoom:80%;" />
+
+成功安装docker服务
+
+**特权模式运行docker**
+
+**如何开启特权模式**
+
+要在Docker容器中开启特权模式，我们可以使用--privileged选项。例如，以下是一个启动特权容器的示例命令：
+
+```
+docker run --privileged -it ubuntu bash
+```
+
+在上述命令中，我们使用--privileged选项来启动一个以交互式方式运行的Ubuntu容器，并打开一个bash终端。
