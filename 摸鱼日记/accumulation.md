@@ -5864,7 +5864,7 @@ gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
 #released updates 
 [updates]
 name=CentOS-$releasever - Updates - Aliyun
-baseurl=http://mirrors.aliyun.com/centos/$releasever/updates/$basearch/
+baseurl=http://mirrors.aliyuncom/centos/$releasever/updates/$basearch/
 gpgcheck=1
 gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
  
@@ -6861,8 +6861,7 @@ taskkill /f /t /pid pid号码
 现做调整
 
 ```
-将原先的cms绑定宿主机的另一个网卡
-在docker中搭建web服务，并且反代服务器代理改为dockerweb服务
+新开一个centos服务器来做dockerweb服务，在docker中搭建web服务，并且反代服务器代理改为dockerweb服务
 ```
 
 ### 安装docker
@@ -6898,6 +6897,7 @@ taskkill /f /t /pid pid号码
 
 ```
 yum install docker-ce docker-ce-cli containerd.io
+yum install -y docker-ce
 ```
 
 <img src="image/image-20240809094501410.png" alt="image-20240809094501410" style="zoom:80%;" />
@@ -6921,3 +6921,146 @@ docker run --privileged -it ubuntu bash
 ```
 
 在上述命令中，我们使用--privileged选项来启动一个以交互式方式运行的Ubuntu容器，并打开一个bash终端。
+
+知道了如何来使用特权模式开启容器，我们现在来安装靶场试试
+
+### 安装dockercompose
+
+使用命令下载
+
+```
+# 安装
+curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+```
+
+![image-20240812185259211](image/image-20240812185259211.png)
+
+修改文件权限
+
+```
+chmod +x /usr/local/bin/docker-compose
+```
+
+base自动补全命令
+
+```
+# 补全命令
+curl -L https://raw.githubusercontent.com/docker/compose/1.29.1/contrib/completion/bash/docker-compose > /etc/bash_completion.d/docker-compose
+```
+
+最后看是否安装成功，可以看到成功安装docker-compose
+
+![image-20240812190047126](image/image-20240812190047126.png)
+
+### 下载配置vulhub
+
+创建目录并安装git
+
+```
+mkdir -p /var/local/soft/
+cd /var/local/soft
+yum -y install git
+```
+
+![image-20240812190344688](image/image-20240812190344688.png)
+
+从vulhub官方下载靶场文件
+
+```
+git clone https://github.com/vulhub/vulhub.git
+```
+
+但是这里我们挂上代理来下载
+
+```
+git config --global http.proxy 'socks5://127.0.0.1:1080'
+git config --global https.proxy 'socks5://127.0.0.1:1080'
+这里的ip和端口跟上我们本地的代理
+```
+
+![image-20240812192436456](image/image-20240812192436456.png)
+
+用完之后可以关闭代理
+
+```
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+```
+
+![image-20240812192715153](image/image-20240812192715153.png)
+
+进到vulhub靶场，可以看到很多漏洞环境
+
+![image-20240812192946476](image/image-20240812192946476.png)
+
+这里我们随便选择一个漏洞环境来试试
+
+```
+cd /weblogic/weak_password/
+```
+
+这里看见我们的绝对路径
+
+![image-20240812193525978](image/image-20240812193525978.png)
+
+启动漏洞环境
+
+![image-20240812194153624](image/image-20240812194153624.png)
+
+怒了
+
+更新了dockercompose的版本，出现了一个文件忙的报错
+
+用
+
+```
+ps -aux | grep <进程名>找到进程号杀掉，再进入vulhub靶场尝试启动环境
+```
+
+启动环境发现又报错了。。。
+
+![image-20240812203416965](image/image-20240812203416965.png)
+
+我们这里换一下docker的源
+
+**编辑Docker配置文件**: 打开或创建 `/etc/docker/daemon.json` 文件
+
+```
+{
+  "registry-mirrors": [
+    "https://registry.docker-cn.com",
+    "http://hub-mirror.c.163.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://dockerhub.azk8s.cn",
+    "https://mirror.ccs.tencentyun.com",
+    "https://registry.cn-hangzhou.aliyuncs.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://atomhub.openatom.cn"
+  ]
+}
+```
+
+**重启Docker服务**: 为使配置生效，请执行以下命令：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+```
+或者换成这些
+{
+    "registry-mirrors": [
+        "https://hub.uuuadc.top",
+        "https://docker.anyhub.us.kg",
+        "https://dockerhub.jobcher.com",
+        "https://dockerhub.icu",
+        "https://docker.ckyl.me",
+        "https://docker.awsl9527.cn",
+        "https://atomhub.openatom.cn"
+    ]
+}
+```
+
+
+
