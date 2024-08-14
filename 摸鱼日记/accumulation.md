@@ -7062,5 +7062,76 @@ sudo systemctl restart docker
 }
 ```
 
+后续一直出现Error response from daemon: Get “https://registry-1.docker.io/v2/“: read:报错
 
+**解决：**
+
+首先尝试了，修改http-proxy.conf文件发现并没有作用
+
+```
+# 创建/etc/systemd/system/docker.service.d路径
+sudo mkdir -p /etc/systemd/system/docker.service.d
+# 创建 http-proxy.conf
+sudo touch /etc/systemd/system/docker.service.d/http-proxy.conf
+# 写入配置
+vim /etc/systemd/system/docker.service.d/http-proxy.conf
+# 粘贴下方配置代理并wq退出
+[Service]
+Environment="HTTP_PROXY=http://proxy.example.com:8080/"
+Environment="HTTPS_PROXY=http://proxy.example.com:8080/"
+Environment="NO_PROXY=localhost,127.0.0.1,.example.com"
+```
+
+尝试做以下配置修改
+
+```
+cd /lib/systemd/system && sudo vim docker.service
+
+Environment=HTTP_PROXY=http://10.70.80.900:8080/ #这里换成自己的本地代理
+Environment=HTTPS_PROXY=http://10.70.80.900:8080/ #这里也换成本地代理
+Environment=NO_PROXY=localhost, 127.0.0.1, ::1, 10.9*
+```
+
+然后重启服务
+
+```
+sudo systemctl daemon-reload 
+sudo systemctl restart docker
+```
+
+然后进入到我们的/var/local/soft/vulhub/weblogic/weak_password漏洞环境目录，尝试pull，发现没有再出现报错，成功拉取
+
+![image-20240813145756269](image/image-20240813145756269.png)
+
+关闭防火墙，重启docker再来开启
+
+![image-20240813152659223](image/image-20240813152659223.png)
+
+访问页面，发现特征明显的weblogic指纹
+
+<img src="image/image-20240813165639116.png" alt="image-20240813165639116" style="zoom:80%;" />
+
+```
+http://192.168.1.1:7001/console/login/LoginForm.jsp
+```
+
+尝试访问登录框页面
+
+<img src="image/image-20240813170700415.png" alt="image-20240813170700415" style="zoom:80%;" />
+
+```
+使用weblogic/Oracle@123成功登录，证明vulhub部署完毕。
+```
+
+登录成功
+
+<img src="image/image-20240813170833304.png" alt="image-20240813170833304" style="zoom:80%;" />
+
+不需要靶场时，使用
+
+```
+docker-compose down关闭靶场
+```
+
+### 更改nginx反向代理配置
 
