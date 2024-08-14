@@ -6240,7 +6240,7 @@ http://192.168.83.156/NoneCMS/public/install/index.php
 ```
 
 ```
-http://192.168.108./Boot-CMS-master.zip
+http://192.168.108.1/Boot-CMS-master.zip
 ```
 
 # 7.30
@@ -6924,6 +6924,8 @@ docker run --privileged -it ubuntu bash
 
 知道了如何来使用特权模式开启容器，我们现在来安装靶场试试
 
+# 8.14
+
 ### 安装dockercompose
 
 使用命令下载
@@ -7135,3 +7137,54 @@ docker-compose down关闭靶场
 
 ### 更改nginx反向代理配置
 
+改一下后端服务地址与端口
+
+<img src="image/image-20240814161909518.png" alt="image-20240814161909518" style="zoom:80%;" />
+
+重启nginx的服务
+
+<img src="image/image-20240814162239601.png" alt="image-20240814162239601" style="zoom:80%;" />
+
+发现方向代理成功
+
+<img src="image/image-20240814162350187.png" alt="image-20240814162350187" style="zoom:80%;" />
+
+### 特权模式docker逃逸配置
+
+配置docker-compose.yml文件，加上特权模式再重新启动
+
+<img src="image/image-20240814172058303.png" alt="image-20240814172058303" style="zoom: 80%;" />
+
+启动成功。
+
+## 网卡配置
+
+我们根据自己设定的网络模式，来进行分配
+
+```
+192.168.111.xxx 网卡1
+192.168.130.xxx 网卡2
+192.168.193.xxx 网卡3
+```
+
+给docker web主机添加一个网卡2
+
+<img src="image/image-20240814201210548.png" alt="image-20240814201210548" style="zoom:80%;" />
+
+给centos cms改为网卡2和网卡3
+
+<img src="image/image-20240814201738802.png" alt="image-20240814201738802" style="zoom:80%;" />
+
+给win2019设置为网卡3
+
+<img src="image/image-20240814202121656.png" alt="image-20240814202121656" style="zoom: 67%;" />
+
+网络配置完成
+
+## cms
+
+尝试给win7添加网卡2，看业务系统是否还能正常访问到，可以看见还能正常访问到（配置一下防火墙策略）
+
+<img src="image/image-20240814203310468.png" alt="image-20240814203310468" style="zoom:80%;" />
+
+## win2019配置永恒之蓝
