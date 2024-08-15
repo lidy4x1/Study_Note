@@ -5754,7 +5754,7 @@ DNS解析：将域名转换成对应IP地址(本机DNS缓存栈开始找—>逐�
 
 # 蓝队靶场溯源
 
-## 配置、环境搭建
+### 配置、环境搭建
 
 安装：
 
@@ -5772,7 +5772,7 @@ docker-compose
 
 正式搭建
 
-## 网络配置
+### 网络配置
 
 安装完成之后发现是一个最小化的centos，所以我们先进行网络配置
 
@@ -5806,9 +5806,9 @@ cat /etc/resolv.conf //查看dns配置，这里可先不看
 
 <img src="image/image-20240725154334259.png" alt="image-20240725154334259" style="zoom:80%;" />
 
-## 服务配置
+### 服务配置
 
-### yum安装
+#### yum安装
 
 关闭防火墙和selinux
 
@@ -5890,7 +5890,7 @@ gpgkey=http://mirrors.aliyun.com/centos/RPM-GPG-KEY-CentOS-7
 
 <img src="image/image-20240725175818303.png" alt="image-20240725175818303" style="zoom:80%;" />
 
-### apache、php、thinkphp安装
+#### apache、php、thinkphp安装
 
 安装apache
 
@@ -6003,7 +6003,7 @@ DirectoryIndex index.php
 
 <img src="image/image-20240725211850652.png" alt="image-20240725211850652" style="zoom:80%;" />
 
-### nginx安装、php-fpm
+#### nginx安装、php-fpm
 
 后续发现太麻烦了，改成nginx
 
@@ -6072,7 +6072,7 @@ vim /etc/php-fpm.conf 将里面的监听端口形式改成本地sock形式
 
 <img src="image/image-20240726004024893.png" alt="image-20240726004024893" style="zoom:67%;" />
 
-### thinkphp框架
+#### thinkphp框架
 
 然后我们将之前下载好的thinkphp文件cp到我们的web目录下
 
@@ -6084,7 +6084,7 @@ cp thinkphp /usr/share/nginx/html 将thinkphp文件放在web下
 
 这里要在搭好的thinkphp框架上去搭建其他服务，还需要mysql服务
 
-### mysql安装
+#### mysql安装
 
 删除原有数据
 
@@ -6220,7 +6220,7 @@ default-storage-engine=innodb
 
 # 7.29
 
-### 完善web服务
+#### 完善web服务
 
 首先关闭防火墙
 
@@ -6398,13 +6398,13 @@ sudo yum install php php-mbstring
 
 解决报错发现是伪静态的原因，修改了一下nginx的配置文件，对于php文件格式的解析，做了更详细的配置，解决了后台报错。主页面报错是因为，图片前面有跟/，会被js解析成根目录下的图片，所以加载不出来，手动去改，就可以看到图片。
 
-# **补充小知识**
+## **补充小知识**
 
-## 伪静态
+### 伪静态
 
-### fastcgi
+#### fastcgi
 
-#### cgi
+##### cgi
 
 通用网关接口（Common Gateway Interface/CGI）描述了客户端和服务器程序之间传输数据的一种标准，可以让一个客户端从网页浏览器向执行在网络服务器上的程序请求数据。CGI 独立于任何语言的，CGI 程序可以用任何脚本语言或者是完全独立编程语言实现，只要这个语言可以在这个系统上运行。
 
@@ -6427,7 +6427,7 @@ sudo yum install php php-mbstring
 6、弊端：在服务器端CGI进程会被频繁的创建销毁，服务器开销大, 效率低
 ```
 
-#### fastcgi
+##### fastcgi
 
 快速通用网关接口FastCommonGatewayInterface是通用网关接口CGI的改进，描述了客户端和服务器程序之间传输数据的一种标准。
 
@@ -6612,7 +6612,7 @@ int main()
 
 ```
 
-### 伪静态详解
+##### 伪静态详解
 
 ```
 伪静态即是网站本身是动态网页如.php、.asp、.aspx等格式动态网页有时这类动态网页还跟"?"加参数来读取数据库内不同资料，伪静态就是做url重写操作(即rewrite)。很典型的案例即是discuz论坛系统，后台就有一个设置伪静态功能，开启伪静态后，动态网页即被转换重写成静态网页类型页面，通过浏览器访问地址和真的静态页面没区别。但是记住：做伪静态的前提就是服务器要支持伪静态重写URL Rewrite功能。
@@ -6620,7 +6620,7 @@ int main()
 考虑搜索引擎优化(即SEO)，将动态网页通过服务器处理成静态页面，如www.kevin.com/jk/fd.php?=12这样的动态网页处理成www.kevin.com/jk-fd-12.html这样格式静态页面，常见的论坛帖子页面，都是经过伪静态处理成静态页面格式html页面。由于网站所用的程序语言不易被发现，经过重写来伪静态来将动态网页的程序后缀变为html的静态页面格式。伪静态是一种可以把文件后缀改成任何可能的一种方法，比如如果想把php文件伪静态成html文件，这种配置相当简单的，后面会提到相应配置。
 ```
 
-### **真静态与伪静态**
+##### **真静态与伪静态**
 
 真静态(html)优点；1)减少服务器对数据响应的负荷；2)加载不用调动数据库，响应速度快。 
 
@@ -6630,7 +6630,7 @@ int main()
 
 伪静态缺点：1)如果流量稍大一些使用伪静态就出现CPU使用超负荷,因为伪静态是用正则判断而不是真实地址，分辨到底显示哪个页面的责任也由直接指定转由CPU来判断了，所以CPU占有量的上升，确实是伪静态最大的弊病；2)伪静态效率不如生成html的，因为它不是真正意义上的静态页，所以每次请求都是要去读取数据库的信息（这个可以用缓存技术来补偿一下）。
 
-### 真静态和伪静态的区别 
+##### 真静态和伪静态的区别 
 
 1)是不是一个真正静态页面； 
 
@@ -6640,7 +6640,7 @@ int main()
 
 4)用javascript:alert(document.lastModified)来判断是真静态还是伪静态；
 
-### **伪静态的实现** 
+##### **伪静态的实现** 
 
 伪静态是相对于真静态而言的,就是把一些asp，php等结尾url通过apche或nginx的重写规则，变成以html一类的静态页面形式。伪静态不是真正的静态，它和动态地址一样要读取数据库。伪静态最主要的作用就是利于seo，百度spider(百度蜘蛛)喜欢抓取静态页面，可容易使百度spider陷入死循环；并发量高的时候会加大服务器的压力，所以用的时候要注意。
 
@@ -6648,7 +6648,7 @@ int main()
 
 伪静态有两种配置方式 1) 在配置[虚拟主机](https://cloud.tencent.com/product/lighthouse?from_column=20065&from=20065)的时候设置； 2) 在web根目录下创建一个.htaccess文件，在这个文件里面配置；
 
-### rewirte伪静态参数配置
+##### rewirte伪静态参数配置
 
 **正则表达式匹配，其中：**
 
@@ -6702,7 +6702,7 @@ $server_port
 $uri
 ```
 
-### thinkphp伪静态
+##### thinkphp伪静态
 
 URL伪静态通常是为了满足更好的SEO效果，ThinkPHP支持伪静态URL设置，可以通过设置`url_html_suffix`参数随意在URL的最后增加你想要的静态后缀，而不会影响当前操作的正常执行。例如，我们在`route.php`中设置
 
@@ -6775,7 +6775,7 @@ http://serverName/blog/read/id/3.html
 
 # 8.5
 
-## 配置反向代理
+### 配置反向代理
 
 **首先在我们的windows（反代服务器）上安装nginx服务**
 
@@ -6787,7 +6787,7 @@ HTTP服务器块 (server): 定义监听的IP地址、端口以及与之关联的
 
 反向代理指令 (proxy_pass): 指定请求应被转发到的后端服务器的URL。Nginx将替换匹配到的位置块中的URI，并将其发送到指定的后端服务器。
 
-### nginx反向代理配置
+#### nginx反向代理配置
 
 ```
 http {
@@ -6856,7 +6856,7 @@ taskkill /f /t /pid pid号码
 
 <img src="image/image-20240806154654866.png" alt="image-20240806154654866" style="zoom:67%;" />
 
-## docker逃逸复现
+### docker逃逸复现
 
 现做调整
 
@@ -6864,7 +6864,7 @@ taskkill /f /t /pid pid号码
 新开一个centos服务器来做dockerweb服务，在docker中搭建web服务，并且反代服务器代理改为dockerweb服务
 ```
 
-### 安装docker
+#### 安装docker
 
 先安装docker的依赖包
 
@@ -6926,7 +6926,7 @@ docker run --privileged -it ubuntu bash
 
 # 8.14
 
-### 安装dockercompose
+#### 安装dockercompose
 
 使用命令下载
 
@@ -6954,7 +6954,7 @@ curl -L https://raw.githubusercontent.com/docker/compose/1.29.1/contrib/completi
 
 ![image-20240812190047126](image/image-20240812190047126.png)
 
-### 下载配置vulhub
+#### 下载配置vulhub
 
 创建目录并安装git
 
@@ -7135,7 +7135,7 @@ http://192.168.1.1:7001/console/login/LoginForm.jsp
 docker-compose down关闭靶场
 ```
 
-### 更改nginx反向代理配置
+#### 更改nginx反向代理配置
 
 改一下后端服务地址与端口
 
@@ -7149,7 +7149,7 @@ docker-compose down关闭靶场
 
 <img src="image/image-20240814162350187.png" alt="image-20240814162350187" style="zoom:80%;" />
 
-### 特权模式docker逃逸配置
+#### 特权模式docker逃逸配置
 
 配置docker-compose.yml文件，加上特权模式再重新启动
 
@@ -7157,7 +7157,7 @@ docker-compose down关闭靶场
 
 启动成功。
 
-## 网卡配置
+### 网卡配置
 
 我们根据自己设定的网络模式，来进行分配
 
@@ -7181,10 +7181,96 @@ docker-compose down关闭靶场
 
 网络配置完成
 
-## cms
+### cms
 
 尝试给win7添加网卡2，看业务系统是否还能正常访问到，可以看见还能正常访问到（配置一下防火墙策略）
 
 <img src="image/image-20240814203310468.png" alt="image-20240814203310468" style="zoom:80%;" />
 
-## win2019配置永恒之蓝
+### windows 7永恒之蓝
+
+配置网卡3
+
+<img src="image/image-20240815164857619.png" alt="image-20240815164857619" style="zoom:80%;" />
+
+先打开msfconsole
+
+<img src="image/image-20240815165435393.png" alt="image-20240815165435393" style="zoom:80%;" />
+
+搜索永恒之蓝漏洞，选择可以利用的漏洞
+
+![image-20240815170047027](image/image-20240815170047027.png)
+
+用options查看需要设置的参数
+
+<img src="image/image-20240815170153279.png" alt="image-20240815170153279" style="zoom:80%;" />
+
+设置目标ip
+
+<img src="image/image-20240815182047689.png" alt="image-20240815182047689" style="zoom:80%;" />
+
+出现win的字样，存在永恒之蓝漏洞，成功打入
+
+![image-20240815184021817](image/image-20240815184021817.png)
+
+**至此靶场搭建完毕**
+
+## 模拟攻击
+
+### 信息搜集
+
+首先nmap上号扫！
+
+扫到几个开放的端口，可以尝试访问敏感端口
+
+<img src="image/image-20240815185836237.png" alt="image-20240815185836237" style="zoom:80%;" />
+
+访问端口发现特征明显的指纹
+
+<img src="image/image-20240815190448239.png" alt="image-20240815190448239" style="zoom:80%;" />
+
+### webshell
+
+尝试用weblogic工具打一下
+
+发现存在weblogic相关漏洞
+
+<img src="image/image-20240815191251126.png" alt="image-20240815191251126" style="zoom:80%;" />
+
+尝试命令执行
+
+<img src="image/image-20240815191414113.png" alt="image-20240815191414113" style="zoom:80%;" />
+
+注入内存马，再用哥斯拉连接
+
+<img src="image/image-20240815191700032.png" alt="image-20240815191700032" style="zoom:80%;" />
+
+连接成功，拿到webshell
+
+<img src="image/image-20240815202454224.png" alt="image-20240815202454224" style="zoom:80%;" />
+
+拿到webshell之后我们尝试信息搜集，首先看网卡情况
+
+发现与我们攻击的ip不一致![image-20240815202856807](image/image-20240815202856807.png)
+
+尝试列出根目录下的文件看看，是否有信息
+
+看到有/.dockerenv的文件，证明我们现在处于docker容器中，要进行docker逃逸
+
+<img src="image/image-20240815205015661.png" alt="image-20240815205015661" style="zoom:80%;" />
+
+执行命令看是否是特权模式
+
+```
+cat /proc/self/status | grep CapEff
+```
+
+CapEff 对应的掩码值为0000003fffffffff 或者是 0000001fffffffff则是特权模式运行，可以看见我们当前就是特权模式运行
+
+<img src="image/image-20240815205243619.png" alt="image-20240815205243619" style="zoom:80%;" />
+
+现在处于特权模式所以尝试docker特权模式逃逸
+
+**查看挂载磁盘设备**：`fdisk -l`
+
+<img src="image/image-20240815205620613.png" alt="image-20240815205620613" style="zoom:80%;" />
