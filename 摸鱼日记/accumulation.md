@@ -7318,3 +7318,384 @@ echo test:\$y\$j9T\$c0y6BxqSX5OSoC.6iYLgp.\$OQyZCj8BlQhyJMZpSwTT/KPCJ3h7hojqr7fO
 
 ![image-20240816205423469](image/image-20240816205423469.png)
 
+使用工具连接ssh并提权
+
+<img src="image/image-20240820103234271.png" alt="image-20240820103234271" style="zoom: 67%;" />
+
+上传工具扫描，发现在此网段下还有一台机子，并且开放了22等端口
+
+<img src="image/image-20240820104321444.png" alt="image-20240820104321444" style="zoom: 67%;" />
+
+看见存活的192.168.130.129开放了80端口
+
+<img src="image/image-20240820153840055.png" alt="image-20240820153840055" style="zoom:80%;" />
+
+### 代理
+
+上传服务端至kali
+
+<img src="image/image-20240820155359866.png" alt="image-20240820155359866" style="zoom:80%;" />
+
+通过finalshell上传客户端到centosmini，并给予权限
+
+<img src="image/image-20240820160107335.png" alt="image-20240820160107335" style="zoom: 67%;" />
+
+修改kali的配置文件
+
+<img src="image/image-20240820160141493.png" alt="image-20240820160141493" style="zoom: 67%;" />
+
+修改上传至centos mini的frp客户端文件
+
+<img src="image/image-20240820162448059.png" alt="image-20240820162448059" style="zoom: 67%;" />
+
+先运行服务端
+
+<img src="image/image-20240820224248447.png" alt="image-20240820224248447" style="zoom:80%;" />
+
+再客户端上线
+
+```
+frp -c frpc.ini
+```
+
+![image-20240820163226359](image/image-20240820163226359.png)
+
+更改代理文件将连接端口改为我们的11451
+
+proxychins
+
+通过代理来开启浏览器，再来访问查看129机子的80端口
+
+<img src="image/image-20240821090550171.png" alt="image-20240821090550171" style="zoom:80%;" />
+
+发现80端口是一个t指纹明显的hinkphp搭建的cms业务
+
+且thinkphp版本较低，我们尝试工具是否可以利用thinkphp版本漏洞
+
+这里上传了一个工具，运行，但是发现jdk版本太高了，所以这里要添加一个jdk8的版本
+
+先查看系统含有哪些版本的jdk文件，如果有可以直接切换版本
+
+发现这里只有jak11的版本
+
+<img src="image/image-20240821092146658.png" alt="image-20240821092146658" style="zoom:80%;" />
+
+去jdk官网找到jdk8的版本
+
+<img src="image/image-20240821093626839.png" alt="image-20240821093626839" style="zoom:80%;" />
+
+下载之后上传到kali
+
+解压缩
+
+```
+tar -zxvf /jdk-8u171-linux-x64.tar.gz
+```
+
+<img src="image/image-20240821094341196.png" alt="image-20240821094341196" style="zoom:80%;" />
+
+更改/etc/profile配置文件，加入环境变量
+
+java切换版本
+
+```
+update-alternatives --config java  存在多个版本的jdk文件，可以查看文件路径
+
+sudo update-alternatives --config java   命令切换版本
+```
+
+# 8.22
+
+终结篇，今日必终结
+
+最好在官网下载好jdk的包，不要随意更改/etc/profile文件
+
+看到我们的java版本更换成功
+
+<img src="image/image-20240822092227490.png" alt="image-20240822092227490" style="zoom:80%;" />
+
+### 漏洞利用
+
+上传thinkphp利用工具
+
+<img src="image/image-20240822093726042.png" alt="image-20240822093726042" style="zoom:80%;" />
+
+尝试扫描一下，可以看到流量会经过代理
+
+<img src="image/image-20240822093808127.png" alt="image-20240822093808127" style="zoom:80%;" />
+
+可以看到扫描出来目标确实存在thinkphp漏洞，尝试利用
+
+```.
+192.168.130.129/Nonecms/public
+```
+
+<img src="image/image-20240822093259734.png" alt="image-20240822093259734" style="zoom:80%;" />
+
+### getshell
+
+尝试命令执行并且getshell
+
+<img src="image/image-20240822101708443.png" alt="image-20240822101708443" style="zoom: 67%;" />
+
+上传成功后，使用蚁剑连接
+
+<img src="image/image-20240822101735474.png" alt="image-20240822101735474" style="zoom: 80%;" />
+
+### 正向代理
+
+尝试命令执行，查看网卡信息，发现除了我们本身访问的ip，还有另外一个网卡信息
+
+尝试代理出来，再来信息搜集
+
+所以先尝试ping，先判断是否出网
+
+发现我们内网机是不出网的，所以只能使用正向代理
+
+<img src="image/image-20240822101937844.png" alt="image-20240822101937844" style="zoom: 67%;" />
+
+这里我们使用正向连接的工具：Neo-reGeorg
+
+首先上传至我们的kali
+
+然后生成一个php文件以及设置密码
+
+```
+python neoreg.py generate -k 123456
+```
+
+<img src="image/image-20240822110712813.png" alt="image-20240822110712813" style="zoom:80%;" />
+
+找到php的文件，然后通过蚁剑上传至centos
+
+上传成功
+
+<img src="image/image-20240822111018860.png" alt="image-20240822111018860" style="zoom:67%;" />
+
+通过工具正向连接，记得通过代理（第一层代理，通过centos mini才能访问到centos）
+
+成功代理出来
+
+<img src="image/image-20240822111600612.png" alt="image-20240822111600612" style="zoom:67%;" />
+
+通过代理再来用扫描工具扫描，我们这里本地监听的端口是127.0.0.1:1080
+
+发现在193的网段还存活着一台主机，尝试收集更多信息
+
+<img src="image/image-20240822144736357.png" alt="image-20240822144736357" style="zoom:80%;" />
+
+通过fscan的扫描信息，发现内网的另一台机子是一台win7，且 存在msf17-010
+
+<img src="image/image-20240822145202248.png" alt="image-20240822145202248" style="zoom:80%;" />
+
+我们尝试msf上线打
+
+### msf上线
+
+找到ms17-010，选择模板
+
+<img src="image/image-20240822145428536.png" alt="image-20240822145428536" style="zoom:80%;" />
+
+设置参数
+
+<img src="image/image-20240822145909415.png" alt="image-20240822145909415" style="zoom:80%;" />
+
+通过永恒之蓝漏洞成功上线
+
+<img src="image/image-20240822161546866.png" alt="image-20240822161546866" style="zoom:80%;" />
+
+最后ifconfig发现只有一个网卡，然后做命令执行操作，留后门完事儿
+
+## 靶场溯源
+
+
+
+
+
+
+
+
+
+
+
+# 博客搭建
+
+### hexo美化
+
+github生成一个本地仓库并命名
+
+下载一些工具以及美化工具
+
+下载git并查看是否安装好
+
+安装完毕
+
+<img src="image/image-20240822171027415.png" alt="image-20240822171027415" style="zoom:80%;" />
+
+下载nodejs
+
+下载完毕
+
+<img src="image/image-20240822171615951.png" alt="image-20240822171615951" style="zoom:80%;" />
+
+下载hexo
+
+下载完毕
+
+```
+npm install -g hexo-cli
+hexo –version
+
+hexo init 网站根目录   hexo本身就会创建一个xx的文件夹，如果当前创建的目录是一个空目录，直接hexo init即可
+```
+
+初始化完成
+
+<img src="image/image-20240823101842930.png" alt="image-20240823101842930" style="zoom:80%;" />
+
+在生成完成之后的网站根目录下执行npm run sever ，它会自动生成一个http服务，用于本地预览
+
+```
+npm run server
+```
+
+生成一个本地预览，打开可以看见生成完毕
+
+<img src="image/image-20240823102148481.png" alt="image-20240823102148481" style="zoom:80%;" />
+
+下载自己喜欢的适配的主题
+
+修改_config.yml文件_
+
+修改文章标题以及theme名字以及depoly等板块，例如：
+
+<img src="image/image-20240823103451634.png" alt="image-20240823103451634" style="zoom:80%;" />
+
+这里下载一个方便一键部署的插件
+
+```
+$ npm install --save hexo-deployer-git
+npm audit
+```
+
+这里选择一个theme模板
+
+首先安装模板
+
+```
+npm install hexo-theme-nexmoe hexo-renderer-inferno
+```
+
+使用nexmoe
+
+可以直接修改_config.yml文件的theme值为nexmoe_
+
+也可以用hexo命令
+
+```
+hexo config theme nexmoe
+```
+
+配置完毕之后运行
+
+```
+hexo server --debug
+```
+
+<img src="image/image-20240823131254733.png" alt="image-20240823131254733" style="zoom:80%;" />
+
+看看本地是否生成成功
+
+成功搭建
+
+<img src="image/image-20240823131320870.png" alt="image-20240823131320870" style="zoom:80%;" />
+
+对配置文件做更改
+
+大致做成这个样子
+
+<img src="image/image-20240823145149692.png" alt="image-20240823145149692" style="zoom:80%;" />
+
+### 关联github
+
+部署上传的时候出现报错
+
+显示Deployer not found: git
+
+这里直接在站点根目录下面
+
+```
+npm install hexo-deployer-git --save
+```
+
+![image-20240823151040698](image/image-20240823151040698.png)
+
+再来拉取
+
+可以拉取，但是出现新的报错
+
+<img src="image/image-20240823151234452.png" alt="image-20240823151234452" style="zoom:80%;" />
+
+应该是缓存的问题
+
+解决问题后执行
+
+```
+hexo clean
+hexo deploy 即可
+```
+
+已经有一个大号搞好了，就不随意清缓存了
+
+步骤完结。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Java代码审计
+
+
+
+
+
